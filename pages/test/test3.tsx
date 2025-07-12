@@ -1,0 +1,2095 @@
+"use client"
+
+import { useState, useCallback, useMemo, useEffect } from "react"
+import {
+  Stack,
+  Title,
+  Grid,
+  Group,
+  Button,
+  ActionIcon,
+  Text,
+  rem,
+  Card,
+  Radio,
+  Switch,
+  Badge,
+  Textarea,
+  Tabs,
+  ScrollArea,
+  Collapse,
+  Modal,
+  Checkbox,
+} from "@mantine/core"
+import { IconCircleFilled, IconCircle, IconSword, IconShield, IconBrain, IconHistory, IconChevronDown, IconChevronUp, IconUsers, IconRefresh, IconPlus, IconMinus, IconBoxMultiple } from "@tabler/icons-react"
+
+// --- Constants & Data Definitions ---
+
+const CARD_TYPES = {
+  follower: <Badge miw={80} color="blue" variant="light">フォロワー</Badge>,
+  spell: <Badge miw={80} color="blue" variant="light">スペル</Badge>,
+}
+
+const EFFECT_MODES = {
+  default: <Text miw={80}></Text>,
+  enhance: <Badge miw={80} color="orange" variant="light">エンハンス</Badge>,
+  evolve: <Badge miw={80} color="yellow" variant="light">進化</Badge>,
+  super_evolve: <Badge miw={80} color="violet" variant="light">超進化</Badge>,
+}
+
+const THREAT_COLORS = {
+  critical: "red",
+  high: "orange",
+  medium: "yellow",
+  low: "blue",
+}
+
+const THREAT_LABELS = {
+  critical: "最重要",
+  high: "重要",
+  medium: "注意",
+  low: "軽微",
+}
+
+const REMOVAL_CARDS = [
+  {
+    id: "angelic_smite",
+    name: "天罰の神撃",
+    type: "spell",
+    leader: "neutral",
+    baseCost: 5,
+    effects: [{ mode: "default", cost: 5, conditions: {}, effect: "フォロワー1体に5ダメージ" }],
+  },
+  {
+    id: "enhance_bolt",
+    name: "エンハンス・ボルト",
+    type: "spell",
+    leader: "witch",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "敵1体に3ダメージ" },
+      { mode: "enhance", cost: 6, conditions: {}, effect: "敵全体に3ダメージ（エンハンス）" },
+    ],
+  },
+  {
+    id: "orivie",
+    name: "オリヴィエ",
+    type: "follower",
+    leader: "witch",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "敵1体に3ダメージ" },
+      { mode: "enhance", cost: 6, conditions: {}, effect: "敵全体に3ダメージ（エンハンス）" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '進化時：他フォロワー進化' },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '超進化時：他フォロワー超進化' }
+    ],
+  },
+  {
+    id: "dragon_breath",
+    name: "ドラゴンブレス",
+    type: "spell",
+    leader: "dragon",
+    baseCost: 4,
+    effects: [{ mode: "default", cost: 4, conditions: {}, effect: "敵フォロワー1体を破壊" }],
+  },
+  {
+    id: "holy_light",
+    name: "聖なる光",
+    type: "spell",
+    leader: "bishop",
+    baseCost: 2,
+    effects: [{ mode: "default", cost: 2, conditions: {}, effect: "敵フォロワー1体に2ダメージ" }],
+  },
+]
+
+const STRONG_MOVES = {
+  dragon: [
+    { turn: 4, move: "ドラゴンナイト召喚 + PP加速", threat: "high" },
+    { turn: 6, move: "大型フォロワー展開", threat: "critical" },
+    { turn: 8, move: "バハムート級の切り札", threat: "critical" },
+  ],
+  witch: [
+    { turn: 3, move: "スペルブースト蓄積", threat: "medium" },
+    { turn: 5, move: "知恵の光 + 手札補充", threat: "high" },
+    { turn: 7, move: "超越コンボ開始", threat: "critical" },
+  ],
+  bishop: [
+    { turn: 4, move: "治癒の祈り + 回復", threat: "low" },
+    { turn: 6, move: "テミスの審判", threat: "high" },
+    { turn: 8, move: "セラフ召喚", threat: "critical" },
+  ],
+}
+
+const LEADERS = [
+  { value: "elf", label: "エルフ" },
+  { value: "royal", label: "ロイヤル" },
+  { value: "witch", label: "ウィッチ" },
+  { value: "dragon", label: "ドラゴン" },
+  { value: "nightmare", label: "ネクロマンサー" },
+  { value: "bishop", label: "ビショップ" },
+  { value: "nemesis", label: "ネメシス" },
+];
+
+// ネメシスアーティファクトトークンのデータ定義
+const NEMESIS_ARTIFACT_TOKENS = [
+  // Puppets
+  { id: "puppet", name: "操り人形", cost: 1, attack: 1, defense: 1, effect: "効果：なし", category: "puppet" },
+  { id: "enhanced_puppet", name: "強化型操り人形", cost: 1, attack: 2, defense: 2, effect: "効果：なし", category: "puppet" },
+  // Cores
+  { id: "past_core", name: "パスト・コア", cost: 1, attack: 1, defense: 1, effect: "1コストのアーティファクトと合成した時にキャッスルアーティファクトに変身する", category: "core" },
+  { id: "future_core", name: "フューチャー・コア", cost: 1, attack: 1, defense: 1, effect: "1コストのアーティファクトと合成した時にアタックアーティファクトに変身する", category: "core" },
+  // Intermediate Artifacts (formed from cores)
+  { id: "castle_artifact", name: "キャッスルアーティファクト", cost: 3, attack: null, defense: null, effect: "これに【融合】したカードのコストの合計によって変身する。", category: "intermediate_artifact" },
+  { id: "attack_artifact", name: "アタックアーティファクト", cost: 3, attack: null, defense: null, effect: "これに【融合】したカードのコストの合計によって変身する。", category: "intermediate_artifact" },
+  // Destroy Artifacts
+  { id: "destroy_artifact_alpha", name: "デストロイアーティファクトα", cost: 5, attack: null, defense: null, effect: "『デストロイアーティファクトβ』や『デストロイアーティファクトγ』をそれぞれこれに【融合】したとき、『イクシードアーティファクトΩ』に変身する。", category: "destroy_artifact" },
+  { id: "destroy_artifact_beta", name: "デストロイアーティファクトβ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
+  { id: "destroy_artifact_gamma", name: "デストロイアーティファクトγ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
+  // Final Artifact
+  { id: "exceed_artifact_omega", name: "イクシードアーティファクトΩ", cost: 10, attack: null, defense: null, effect: "効果：なし", category: "final_artifact" },
+];
+
+
+// --- Helper Functions ---
+
+/**
+ * Determines if a card effect is active based on current game context.
+ * @param {object} effect - The effect object with conditions and mode.
+ * @param {object} ctx - The game context (turn, pp, ep, sep, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
+ * @returns {boolean} - True if the effect is active, false otherwise.
+ */
+function isEffectActive(effect: any, ctx: any): boolean {
+  const c = effect.conditions || {}
+  if (c.minTurn !== undefined && ctx.turn < c.minTurn) return false
+  if (c.minPP !== undefined && ctx.pp < c.minPP) return false
+
+  // If EP or SEP is required and already used this turn, effect is not active.
+  if ((c.evolveTokenMin !== undefined || c.superEvolveTokenMin !== undefined) && ctx.evolveUsedThisTurn) {
+    return false;
+  }
+  if (c.evolveTokenMin !== undefined && ctx.ep < c.evolveTokenMin) return false
+  if (c.superEvolveTokenMin !== undefined && ctx.sep < c.superEvolveTokenMin) return false
+
+  // Add checks for turn-based EP/SEP usability
+  if (effect.mode === 'evolve' && !ctx.isEpUsable) return false;
+  if (effect.mode === 'super_evolve' && !ctx.isSepUsable) return false;
+
+  // Special handling for default mode: if an enhance effect is available and affordable, default is skipped.
+  if (effect.mode === "default" && ctx.cardEffects) {
+    const hasAffordableEnhance = ctx.cardEffects.some((e: any) => e.mode === "enhance" && e.cost <= ctx.pp)
+    if (hasAffordableEnhance) return false
+  }
+
+  return effect.cost <= ctx.pp // Effect is active if its cost is affordable
+}
+
+/**
+ * Determines the most relevant actionable effect for a card based on current game context.
+ * This is used to decide which effect the "使用" button should trigger.
+ * @param {object} card - The card object.
+ * @param {object} ctx - The game context (turn, pp, ep, sep, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
+ * @returns {object | null} - The most relevant actionable effect, or null if none.
+ */
+function getActionableEffect(card: any, ctx: any): any | null {
+  const activeEffects = card.effects.filter((eff: any) => isEffectActive(eff, {
+    turn: ctx.turn,
+    pp: ctx.pp,
+    ep: ctx.ep,
+    sep: ctx.sep,
+    cardEffects: card.effects,
+    evolveUsedThisTurn: ctx.evolveUsedThisTurn,
+    isEpUsable: ctx.isEpUsable, // Pass to isEffectActive
+    isSepUsable: ctx.isSepUsable, // Pass to isEffectActive
+  }));
+
+  // Prioritization for what the button triggers:
+  // 1. Affordable Enhance (if exists)
+  // 2. Affordable Default (if exists)
+  // 3. Affordable Evolve/Super-evolve (if EP/SEP conditions met and not used this turn)
+  // This order ensures PP-consuming play effects are prioritized over evolution.
+  const enhanceAction = activeEffects.find((e: any) => e.mode === 'enhance' && e.cost <= ctx.pp);
+  if (enhanceAction) return enhanceAction;
+
+  const defaultAction = activeEffects.find((e: any) => e.mode === 'default' && e.cost <= ctx.pp);
+  if (defaultAction) return defaultAction;
+
+  // If no PP-consuming play effects are affordable, consider evolve/super_evolve if conditions are met
+  const evolveAction = activeEffects.find((e: any) => e.mode === 'evolve');
+  if (evolveAction && ctx.isEpUsable && ctx.ep >= (evolveAction.conditions?.evolveTokenMin || 1) && !ctx.evolveUsedThisTurn) {
+      return evolveAction;
+  }
+
+  const superEvolveAction = activeEffects.find((e: any) => e.mode === 'super_evolve');
+  if (superEvolveAction && ctx.isSepUsable && ctx.sep >= (superEvolveAction.conditions?.superEvolveTokenMin || 1) && !ctx.evolveUsedThisTurn) {
+      return superEvolveAction;
+  }
+
+  return null; // If no active and actionable effect is found
+}
+
+
+// --- Components ---
+
+/**
+ * DotSelector Component: A visual selector for numeric values using filled and unfilled circles.
+ * @param {object} props - Component props.
+ * @param {number} props.value - Current selected value (total count).
+ * @param {number} props.max - Maximum possible value.
+ * @param {function} props.onChange - Callback when value changes.
+ * @param {string} props.label - Label for the selector.
+ * @param {boolean} [props.disabled=false] - Whether the selector is disabled.
+ * @param {number} [props.knownCount=0] - Number of known items (for special coloring).
+ * @param {string} [props.knownColor="green"] - Color for known items.
+ */
+function DotSelector({ value, max, onChange, label, disabled = false, knownCount = 0, knownColor = "green" }: any) {
+  return (
+    <Stack gap={4}>
+      <Group justify="space-between" wrap="nowrap">
+        <Text size="sm" c={disabled ? "dark.3" : "blue.3"}>
+          {label}
+        </Text>
+        <Text size="sm" c={disabled ? "dark.4" : "blue.4"}>{`${value} / ${max}`}</Text>
+      </Group>
+      <Group gap={6}>
+        {Array.from({ length: max }, (_, i) => {
+          const isKnown = i < knownCount;
+          const isSelected = i < value;
+          let dotColor = "dark"; // Unselected color
+
+          if (isKnown) {
+            dotColor = knownColor; // Known items color
+          } else if (isSelected) {
+            dotColor = "blue"; // Other selected items color
+          }
+
+          return (
+            <ActionIcon
+              key={i}
+              radius="xl"
+              variant="light"
+              disabled={disabled}
+              color={dotColor} // Use the determined dotColor
+              size={rem(32)}
+              onClick={() => {
+                const clickValue = i + 1; // onClickハンドラ内でclickValueを定義
+                onChange(clickValue === value ? 0 : clickValue);
+              }}
+              style={{
+                backgroundColor: dotColor === knownColor ? `var(--mantine-color-${knownColor}-9)` : (dotColor === "blue" ? `var(--mantine-color-blue-9)` : `var(--mantine-color-dark-6)`),
+                border: `1px solid ${dotColor === knownColor ? `var(--mantine-color-${knownColor}-7)` : (dotColor === "blue" ? `var(--mantine-color-blue-7)` : `var(--mantine-color-dark-4)`)}`,
+                // Disabled state styling for ActionIcon
+                ...(disabled && {
+                  backgroundColor: "var(--mantine-color-dark-9)", // Darker background
+                  border: "1px solid var(--mantine-color-dark-7)", // Darker border
+                  color: "var(--mantine-color-dark-5)", // Darker icon color
+                }),
+              }}
+            >
+              {isSelected ? <IconCircleFilled size={20} /> : <IconCircle size={20} />}
+            </ActionIcon>
+          )
+        })}
+      </Group>
+    </Stack>
+  )
+}
+
+/**
+ * RemovalCardBlock Component: Displays a single removal card with its effects and a usage button.
+ * @param {object} props - Component props.
+ * @param {object} props.card - The card object (now includes displayCost).
+ * @param {number} props.ppCurrent - Current PP.
+ * @param {number} props.ppMax - Max PP.
+ * @param {function} props.onUseCard - Callback when the card is used.
+ * @param {object} props.actionableEffect - The effect that the '使用' button will trigger, or null.
+ */
+function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect }: any) {
+  const [showAllEffects, setShowAllEffects] = useState(false);
+
+  // The button is always enabled if actionableEffect is passed to this component
+  // because the filtering in Home component ensures only actionable cards are displayed.
+  const isDisabled = !actionableEffect;
+
+  return (
+    <Card
+      shadow="sm"
+      withBorder
+      style={{ backgroundColor: "var(--mantine-color-dark-7)" }}
+    >
+      <Group mt="xs" justify="space-between" wrap="nowrap">
+        <Group>
+          <Button
+            size="sm"
+            variant="filled"
+            color="blue"
+            onClick={() => actionableEffect && onUseCard(card, actionableEffect)}
+            disabled={isDisabled}
+            styles={{
+              root: {
+                "&[data-disabled]": {
+                  backgroundColor: "var(--mantine-color-dark-9) !important",
+                  color: "var(--mantine-color-dark-5) !important",
+                  cursor: "not-allowed",
+                },
+              },
+            }}
+          >
+            使用
+          </Button>
+          {CARD_TYPES[card.type]}
+          <Badge color="blue" variant="light">
+            {card.displayCost}コスト {/* Use the new displayCost */}
+          </Badge>
+          <Text fw="bold" c="blue.2">
+            {card.name}
+          </Text>
+        </Group>
+        <ActionIcon
+          variant="light"
+          onClick={() => setShowAllEffects((o) => !o)}
+          color="blue"
+          size="md"
+        >
+          {showAllEffects ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
+        </ActionIcon>
+      </Group>
+
+      {/* Display only truly active effects based on card.availableEffects */}
+      {card.availableEffects.map((eff: any, i: number) => (
+        <Group key={`active-${i}`} mt="xs">
+          {EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]}
+          <Text size="sm" c="blue.4">
+            ・{eff.effect}
+          </Text>
+        </Group>
+      ))}
+
+      <Collapse in={showAllEffects}>
+        <Stack gap="xs" mt="md" style={{ borderTop: '1px solid var(--mantine-color-dark-5)', paddingTop: '10px' }}>
+          <Text size="sm" fw="bold" c="blue.3">全効果:</Text>
+          {card.effects.map((eff: any, i: number) => (
+            <Group key={`all-${i}`} mt="xs">
+              {EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]}
+              <Text size="sm" c="blue.4">
+                ・{eff.effect}
+              </Text>
+            </Group>
+          ))}
+        </Stack>
+      </Collapse>
+    </Card>
+  )
+}
+
+/**
+ * ThreatBadge Component: Displays a threat level with appropriate color and label.
+ * @param {object} props - Component props.
+ * @param {string} props.threat - The threat level (e.g., "critical", "high").
+ */
+function ThreatBadge({ threat }: { threat: keyof typeof THREAT_COLORS }) {
+  return (
+    <Badge color={THREAT_COLORS[threat]} variant="light">
+      {THREAT_LABELS[threat]}
+    </Badge>
+  )
+}
+
+// トークンデータの型定義
+interface NemesisToken {
+    id: string;
+    name: string;
+    cost: number;
+    attack: number | null;
+    defense: number | null;
+    effect: string;
+    category: string;
+}
+
+interface NemesisTokenCardProps {
+  token: NemesisToken;
+  count: number;
+  handleArtifactCountChange: (tokenId: string, change: number) => void;
+  handCount: number;
+}
+
+/**
+ * NemesisTokenCard Component: Displays a single Nemesis artifact token with its count and details.
+ * @param {object} props - Component props.
+ * @param {object} props.token - The token object from NEMESIS_ARTIFACT_TOKENS.
+ * @param {number} props.count - The current count of this token.
+ * @param {function} props.handleArtifactCountChange - Callback to change the token count.
+ * @param {number} props.handCount - Current total hand count (for + button disabled state).
+ */
+function NemesisTokenCard({ token, count, handleArtifactCountChange, handCount }: NemesisTokenCardProps) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <Card withBorder style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+      <Group justify="space-between" wrap="nowrap">
+        <Group>
+          <Text size="sm" c="blue.4">{token.name}</Text>
+          <Badge color="cyan" variant="light">{count}枚</Badge>
+          <ActionIcon variant="light" color="blue" size="sm" onClick={() => handleArtifactCountChange(token.id, 1)} disabled={handCount >= 9}><IconPlus size={16} /></ActionIcon>
+          <ActionIcon variant="light" color="red" size="sm" onClick={() => handleArtifactCountChange(token.id, -1)} disabled={count <= 0}><IconMinus size={16} /></ActionIcon>
+        </Group>
+        <ActionIcon variant="light" onClick={() => setShowDetails(o => !o)} color="blue" size="md">
+          {showDetails ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
+        </ActionIcon>
+      </Group>
+      <Collapse in={showDetails}>
+        <Stack gap="xs" mt="md" style={{ borderTop: '1px solid var(--mantine-color-dark-5)', paddingTop: '10px' }}>
+          <Text size="xs" c="dark.3">
+            コスト: {token.cost}
+            {token.attack !== null && <><br />攻撃力: {token.attack}</>}
+            {token.defense !== null && <><br />体力: {token.defense}</>}
+            {token.effect && <><br />効果: {token.effect}</>}
+          </Text>
+        </Stack>
+      </Collapse>
+    </Card>
+  );
+}
+
+
+// --- Main Application Component ---
+
+export default function Home() {
+  // --- State Management ---
+  const [turn, setTurn] = useState(1)
+  const [basePpMax, setBasePpMax] = useState(1)
+  const [extraPpMax, setExtraPpMax] = useState(0)
+  const [turnPpBonus, setTurnPpBonus] = useState(0)
+  const [ppCurrent, setPpCurrent] = useState(1)
+  const [ep, setEp] = useState(2)
+  const [sep, setSep] = useState(2)
+  const [firstOrSecond, setFirstOrSecond] = useState("first")
+  const [extraPPUsedThisTurn, setExtraPPUsedThisTurn] = useState(false)
+  const [evolveUsedThisTurn, setEvolveUsedThisTurn] = useState(false)
+  const [handCount, setHandCount] = useState(4)
+  const [leader, setLeader] = useState<string | null>(null) // 初期値をnullに設定
+  const [fairyCount, setFairyCount] = useState(0); // Add state for Fairy tokens
+  const [showFairyDetails, setShowFairyDetails] = useState(false); // State for fairy details collapse
+
+  // ネメシスアーティファクトトークンの状態
+  const [puppetCount, setPuppetCount] = useState(0);
+  const [enhancedPuppetCount, setEnhancedPuppetCount] = useState(0);
+  const [pastCoreCount, setPastCoreCount] = useState(0);
+  const [futureCoreCount, setFutureCoreCount] = useState(0);
+  const [castleArtifactCount, setCastleArtifactCount] = useState(0);
+  const [attackArtifactCount, setAttackArtifactCount] = useState(0);
+  const [destroyArtifactAlphaCount, setDestroyArtifactAlphaCount] = useState(0);
+  const [destroyArtifactBetaCount, setDestroyArtifactBetaCount] = useState(0);
+  const [destroyArtifactGammaCount, setDestroyArtifactGammaCount] = useState(0);
+  const [exceedArtifactOmegaCount, setExceedArtifactOmegaCount] = useState(0);
+
+  // 各ネメシストークンの詳細表示状態
+  const [showPuppetDetails, setShowPuppetDetails] = useState(false);
+  const [showEnhancedPuppetDetails, setShowEnhancedPuppetDetails] = useState(false);
+  const [showPastCoreDetails, setShowPastCoreDetails] = useState(false);
+  const [showFutureCoreDetails, setShowFutureCoreDetails] = useState(false);
+  const [showCastleArtifactDetails, setShowCastleArtifactDetails] = useState(false);
+  const [showAttackArtifactDetails, setShowAttackArtifactDetails] = useState(false);
+  const [showDestroyArtifactAlphaDetails, setShowDestroyArtifactAlphaDetails] = useState(false);
+  const [showDestroyArtifactBetaDetails, setShowDestroyArtifactBetaDetails] = useState(false);
+  const [showDestroyArtifactGammaDetails, setShowDestroyArtifactGammaDetails] = useState(false);
+  const [showExceedArtifactOmegaDetails, setShowExceedArtifactOmegaDetails] = useState(false);
+
+
+  const [tokenNotes, setTokenNotes] = useState("")
+  const [gameHistory, setGameHistory] = useState<Array<{ turn: number; action: string; pp: number; hand: number }>>([])
+  const [isLeaderModalOpened, setIsLeaderModalOpened] = useState(false); // State for leader selection modal
+
+  // Synthesis Modal States
+  const [isSynthesisModalOpened, setIsSynthesisModalOpened] = useState(false);
+  const [synthesisTarget, setSynthesisTarget] = useState<string | null>(null); // e.g., "castle_artifact", "destroy_alpha"
+  const [selectedMaterials, setSelectedMaterials] = useState<Record<string, number>>({}); // { tokenId: count } for selected materials
+  const [synthesisError, setSynthesisError] = useState(""); // For displaying synthesis errors to user
+
+
+  // --- Helper to reset all game states (excluding leader) ---
+  const resetGameStates = useCallback(() => {
+    setTurn(1);
+    setBasePpMax(1);
+    setExtraPpMax(0);
+    setTurnPpBonus(0);
+    setPpCurrent(1);
+    setEp(2);
+    setSep(2);
+    setFirstOrSecond("first");
+    setExtraPPUsedThisTurn(false);
+    setEvolveUsedThisTurn(false);
+    setHandCount(4);
+    setFairyCount(0);
+    // ネメシスアーティファクトトークンのリセット
+    setPuppetCount(0);
+    setEnhancedPuppetCount(0);
+    setPastCoreCount(0);
+    setFutureCoreCount(0);
+    setCastleArtifactCount(0);
+    setAttackArtifactCount(0);
+    setDestroyArtifactAlphaCount(0);
+    setDestroyArtifactBetaCount(0);
+    setDestroyArtifactGammaCount(0);
+    setExceedArtifactOmegaCount(0);
+    setTokenNotes("");
+    setGameHistory([]);
+    setSynthesisError("");
+  }, []);
+
+  // --- Auto-open leader selection modal on initial load ---
+  useEffect(() => {
+    setIsLeaderModalOpened(true);
+  }, []); // 空の依存配列で、コンポーネントのマウント時に一度だけ実行
+
+  // --- Derived State (useMemo for performance) ---
+
+  const isEpUsable = useMemo(() => (firstOrSecond === "first" && turn >= 5) || (firstOrSecond === "second" && turn >= 4), [firstOrSecond, turn])
+  const isSepUsable = useMemo(() => (firstOrSecond === "first" && turn >= 7) || (firstOrSecond === "second" && turn >= 6), [firstOrSecond, turn])
+
+  // Total PP Max calculation: Base + Extra (capped at 10) + Turn bonus (for second player)
+  const ppMax = useMemo(() => {
+    const currentBaseMax = Math.min(10, turn);
+    const currentExtraCapped = Math.min(extraPpMax, 10 - currentBaseMax);
+    return Math.min(10, currentBaseMax + currentExtraCapped) + turnPpBonus;
+  }, [turn, extraPpMax, turnPpBonus]);
+
+
+  const filteredCards = useMemo(() => {
+    // 手札が0枚の場合は、除去カード候補を一切表示しない
+    if (handCount === 0) {
+      return [];
+    }
+    // リーダーが未選択の場合は除去カード候補を一切表示しない
+    if (leader === null) {
+      return [];
+    }
+
+    return REMOVAL_CARDS
+      .filter((card) => card.leader === leader || card.leader === "neutral")
+      .map((card) => {
+        let calculatedDisplayCost = card.baseCost; // デフォルトはカードの基本コスト
+
+        const defaultEffect = card.effects.find(e => e.mode === 'default');
+        const enhanceEffect = card.effects.find(e => e.mode === 'enhance');
+
+        // 表示コストの優先順位:
+        // 1. 現在のPPで利用可能なエンハンス効果のコスト
+        // 2. デフォルト効果のコスト (利用可能かどうかに関わらず)
+        // 3. 上記がなければカードの基本コスト (主に進化・超進化のみのカードの場合)
+        // 進化・超進化の0コストは、この表示コストには使用しない
+        if (enhanceEffect && enhanceEffect.cost <= ppCurrent) {
+            calculatedDisplayCost = enhanceEffect.cost;
+        } else if (defaultEffect) {
+            calculatedDisplayCost = defaultEffect.cost;
+        }
+
+        // Determine the actionable effect for the card based on current game state
+        const actionableEffect = getActionableEffect(card, {
+          turn, pp: ppCurrent, ep, sep, evolveUsedThisTurn, isEpUsable, isSepUsable
+        });
+
+        return {
+          ...card,
+          displayCost: calculatedDisplayCost, // この新しいプロパティを表示コストとして使用
+          actionableEffect: actionableEffect, // アクション可能な効果をカードオブジェクトに追加
+          availableEffects: card.effects
+            .filter((eff: any) => isEffectActive(eff, { turn, pp: ppCurrent, ep, sep, cardEffects: card.effects, evolveUsedThisTurn, isEpUsable, isSepUsable }))
+            .sort((a: any, b: any) => {
+              // 各カード内の利用可能な効果のソート順 (カード名の下のリスト用)
+              // 優先順位: PPが足りるエンハンス > デフォルト > コスト降順
+              if (a.mode === 'enhance' && a.cost <= ppCurrent && b.mode !== 'enhance') return -1;
+              if (b.mode === 'enhance' && b.cost <= ppCurrent && a.mode !== 'enhance') return 1;
+              if (a.mode === 'default' && b.mode !== 'default' && b.mode !== 'enhance') return -1;
+              if (b.mode === 'default' && a.mode !== 'default' && a.mode !== 'enhance') return 1;
+              return b.cost - a.cost;
+            }),
+        };
+      })
+      .filter((c) => c.actionableEffect !== null) // アクション可能な効果があるカードのみを表示
+      .sort((a, b) => b.displayCost - a.displayCost); // メインリストを新しい表示コストでソート
+  }, [leader, turn, ppCurrent, ep, sep, evolveUsedThisTurn, isEpUsable, isSepUsable, handCount]);
+
+  const currentStrongMoves = useMemo(() => {
+    // リーダーが未選択の場合は強い動きを一切表示しない
+    if (leader === null) {
+      return [];
+    }
+    return STRONG_MOVES[leader as keyof typeof STRONG_MOVES]?.filter((move) => move.turn <= turn + 2 && move.turn >= turn) || []
+  }, [leader, turn])
+
+  // Calculate total known artifacts for hand display
+  const totalKnownArtifacts = useMemo(() => {
+    if (leader === "elf") {
+      return fairyCount;
+    } else if (leader === "nemesis") {
+      return (puppetCount || 0) + (enhancedPuppetCount || 0) + (pastCoreCount || 0) + (futureCoreCount || 0) +
+             (castleArtifactCount || 0) + (attackArtifactCount || 0) + (destroyArtifactAlphaCount || 0) +
+             (destroyArtifactBetaCount || 0) + (destroyArtifactGammaCount || 0) + (exceedArtifactOmegaCount || 0);
+    }
+    return 0;
+  }, [leader, fairyCount, puppetCount, enhancedPuppetCount, pastCoreCount, futureCoreCount,
+      castleArtifactCount, attackArtifactCount, destroyArtifactAlphaCount,
+      destroyArtifactBetaCount, destroyArtifactGammaCount, exceedArtifactOmegaCount]);
+
+
+  // --- Handlers ---
+
+  const advanceTurn = useCallback(() => {
+    const newTurn = turn + 1
+    const newBasePpMax = Math.min(10, newTurn)
+
+    const currentExtraCapped = Math.min(extraPpMax, 10 - newBasePpMax)
+
+    let newTurnPpBonus = 0
+    if (firstOrSecond === "second" && !extraPPUsedThisTurn) {
+      newTurnPpBonus = 1;
+    }
+
+    const newPpMaxForNextTurn = Math.min(10, newBasePpMax + currentExtraCapped) + newTurnPpBonus;
+
+    setGameHistory((prev) => [
+      ...prev,
+      {
+        turn,
+        action: `ターン${newTurn}へ進行`,
+        pp: ppCurrent,
+        hand: handCount,
+      },
+    ])
+
+    setTurn(newTurn)
+    setBasePpMax(newBasePpMax)
+    setExtraPpMax(currentExtraCapped)
+    setTurnPpBonus(newTurnPpBonus)
+    setPpCurrent(newPpMaxForNextTurn)
+    setHandCount((prev) => Math.min(prev + 1, 9))
+    setEvolveUsedThisTurn(false)
+    setExtraPPUsedThisTurn(false);
+    // Reset fairy count if leader changes or turn advances
+    if (leader !== "elf") { // Only reset if not Elf, otherwise it's managed by user
+        setFairyCount(0);
+    }
+    // Reset Nemesis artifact counts on turn advance if not Nemesis leader
+    if (leader !== "nemesis") {
+      setPuppetCount(0);
+      setEnhancedPuppetCount(0);
+      setPastCoreCount(0);
+      setFutureCoreCount(0);
+      setCastleArtifactCount(0);
+      setAttackArtifactCount(0);
+      setDestroyArtifactAlphaCount(0);
+      setDestroyArtifactBetaCount(0);
+      setDestroyArtifactGammaCount(0);
+      setExceedArtifactOmegaCount(0);
+    }
+  }, [turn, extraPpMax, ppCurrent, handCount, firstOrSecond, extraPPUsedThisTurn, leader])
+
+
+  const handleTurnChange = useCallback((newTurn: number) => {
+    if (newTurn !== turn) {
+      setEvolveUsedThisTurn(false)
+      setExtraPPUsedThisTurn(false)
+      setEp(2)
+      setSep(2)
+    }
+
+    const newBase = Math.min(10, newTurn)
+    const cappedExtra = Math.min(extraPpMax, 10 - newBase)
+    const newCalculatedPpMax = Math.min(10, newBase + cappedExtra) + (firstOrSecond === "second" && !extraPPUsedThisTurn ? 1 : 0);
+
+    setTurn(newTurn)
+    setBasePpMax(newBase)
+    setExtraPpMax(cappedExtra)
+    setTurnPpBonus((firstOrSecond === "second" && !extraPPUsedThisTurn) ? 1 : 0)
+    setPpCurrent(newCalculatedPpMax)
+    // Reset fairy count if leader changes or turn advances
+    if (leader !== "elf") { // Only reset if not Elf, otherwise it's managed by user
+        setFairyCount(0);
+    }
+    // Reset Nemesis artifact counts on turn change if not Nemesis leader
+    if (leader !== "nemesis") {
+      setPuppetCount(0);
+      setEnhancedPuppetCount(0);
+      setPastCoreCount(0);
+      setFutureCoreCount(0);
+      setCastleArtifactCount(0);
+      setAttackArtifactCount(0);
+      setDestroyArtifactAlphaCount(0);
+      setDestroyArtifactBetaCount(0);
+      setDestroyArtifactGammaCount(0);
+      setExceedArtifactOmegaCount(0);
+    }
+  }, [turn, extraPpMax, firstOrSecond, extraPPUsedThisTurn, leader])
+
+  const handleUseCard = useCallback((card: any, effectToUse: any) => {
+    const newPp = Math.max(0, ppCurrent - effectToUse.cost)
+    const newHandCount = Math.max(0, handCount - 1)
+
+    setPpCurrent(newPp)
+    setHandCount(newHandCount)
+    setGameHistory((prev) => [
+      ...prev,
+      {
+        turn,
+        action: `${card.name} (${(EFFECT_MODES[effectToUse.mode as keyof typeof EFFECT_MODES] as any).props.children})使用`,
+        pp: newPp,
+        hand: newHandCount,
+      },
+    ])
+    // If a Fairy token is used, decrement fairyCount if it's not 0
+    if (card.id === "fairy_token" && fairyCount > 0) { // Assuming a fairy token card has id "fairy_token"
+        setFairyCount(prev => Math.max(0, prev - 1));
+    } else if (fairyCount > 0) { // If any other card is used and there are known fairies, it means an unknown card was used
+        // This is a simplification. In a real game, you'd need to know *which* card was used.
+        // For now, if a non-fairy card is used and fairies are known, we assume an unknown card was used.
+        // If the used card was a known fairy, the above 'fairy_token' check handles it.
+        // If the used card was not a fairy, and fairyCount is > 0, it means one of the 'unknown' cards was used.
+        // The handCount already decreases, so the visual representation will adjust.
+        // No direct change to fairyCount here unless the card itself is a fairy.
+    }
+  }, [ppCurrent, handCount, turn, fairyCount])
+
+
+  const handlePpMaxIncrease = useCallback(() => {
+    setExtraPpMax((prevExtra) => {
+      const newBase = Math.min(10, turn);
+      const newExtra = Math.min(prevExtra + 1, 10 - newBase);
+      const potentialPpMax = Math.min(10, newBase + newExtra) + turnPpBonus;
+      if (ppCurrent > potentialPpMax) setPpCurrent(potentialPpMax);
+      return newExtra;
+    });
+  }, [turn, ppCurrent, turnPpBonus]);
+
+  const handlePpMaxDecrease = useCallback(() => {
+    setExtraPpMax((prevExtra) => {
+      const newBase = Math.min(10, turn);
+      const newExtra = Math.max(0, prevExtra - 1);
+      const potentialPpMax = Math.min(10, newBase + newExtra) + turnPpBonus;
+      if (ppCurrent > potentialPpMax) setPpCurrent(potentialPpMax);
+      return newExtra;
+    });
+  }, [turn, ppCurrent, turnPpBonus]);
+
+  // --- Nemesis Artifact Handlers ---
+
+  // Generic function to get artifact count by ID
+  const getArtifactCount = useCallback((tokenId: string) => {
+    switch (tokenId) {
+      case "puppet": return puppetCount;
+      case "enhanced_puppet": return enhancedPuppetCount;
+      case "past_core": return pastCoreCount;
+      case "future_core": return futureCoreCount;
+      case "castle_artifact": return castleArtifactCount;
+      case "attack_artifact": return attackArtifactCount;
+      case "destroy_artifact_alpha": return destroyArtifactAlphaCount;
+      case "destroy_artifact_beta": return destroyArtifactBetaCount;
+      case "destroy_artifact_gamma": return destroyArtifactGammaCount;
+      case "exceed_artifact_omega": return exceedArtifactOmegaCount;
+      default: return 0;
+    }
+  }, [puppetCount, enhancedPuppetCount, pastCoreCount, futureCoreCount,
+      castleArtifactCount, attackArtifactCount, destroyArtifactAlphaCount,
+      destroyArtifactBetaCount, destroyArtifactGammaCount, exceedArtifactOmegaCount]);
+
+  // Generic function to set artifact count by ID
+  const setArtifactCount = useCallback((tokenId: string, newCount: number) => {
+    switch (tokenId) {
+      case "puppet": setPuppetCount(newCount); break;
+      case "enhanced_puppet": setEnhancedPuppetCount(newCount); break;
+      case "past_core": setPastCoreCount(newCount); break;
+      case "future_core": setFutureCoreCount(newCount); break;
+      case "castle_artifact": setCastleArtifactCount(newCount); break;
+      case "attack_artifact": setAttackArtifactCount(newCount); break;
+      case "destroy_artifact_alpha": setDestroyArtifactAlphaCount(newCount); break;
+      case "destroy_artifact_beta": setDestroyArtifactBetaCount(newCount); break;
+      case "destroy_artifact_gamma": setDestroyArtifactGammaCount(newCount); break;
+      case "exceed_artifact_omega": setExceedArtifactOmegaCount(newCount); break;
+      default: break;
+    }
+  }, []);
+
+  // Handle artifact count changes with +/- buttons
+  const handleArtifactCountChange = useCallback((tokenId: string, change: number) => {
+    const currentCount = getArtifactCount(tokenId);
+    const newCount = Math.max(0, currentCount + change);
+
+    // If adding an artifact
+    if (change > 0) {
+      if (handCount < 9) { // Only add if total hand count is less than 9
+        setArtifactCount(tokenId, newCount);
+        setHandCount(prev => prev + 1); // Increase total hand count
+      } else {
+        setSynthesisError("手札が上限に達しているため、これ以上トークンを追加できません。");
+        // TODO: ユーザーへのフィードバック
+      }
+    } else { // If removing an artifact
+      if (currentCount > 0) { // Only remove if current count is greater than 0
+        setArtifactCount(tokenId, newCount);
+        setHandCount(prev => Math.max(0, prev - 1)); // Decrease total hand count
+      }
+    }
+  }, [getArtifactCount, setArtifactCount, handCount]);
+
+  // Synthesis Logic
+  const executeSynthesis = useCallback((materialsToConsume: Record<string, number>, targetArtifactId: string) => {
+    let canSynthesize = true;
+    let actionMessage = "";
+    let producedArtifact: string | null = null;
+
+    // Check if enough materials are available in hand
+    for (const [materialId, requiredCount] of Object.entries(materialsToConsume)) {
+      if (getArtifactCount(materialId) < requiredCount) {
+        canSynthesize = false;
+        setSynthesisError(`${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === materialId)?.name}が足りません。`);
+        break;
+      }
+    }
+
+    if (!canSynthesize) {
+      return;
+    }
+
+    // --- Synthesis Rules ---
+    if (targetArtifactId === "castle_artifact") {
+      // Rule 1: 2 Past Cores
+      const isTwoPastCore = (materialsToConsume["past_core"] || 0) === 2 && Object.keys(materialsToConsume).length === 1;
+      // Rule 2: 1 Past Core and 1 Future Core
+      const isOneEachCore = (materialsToConsume["past_core"] || 0) === 1 && (materialsToConsume["future_core"] || 0) === 1 && Object.keys(materialsToConsume).length === 2;
+
+      if (isTwoPastCore || isOneEachCore) {
+        producedArtifact = "castle_artifact";
+        actionMessage = isTwoPastCore ? `パスト・コア2枚を合成しキャッスルアーティファクトを生成` : `パスト・コアとフューチャー・コアを合成しキャッスルアーティファクトを生成`;
+      } else {
+        canSynthesize = false;
+        setSynthesisError("キャッスルアーティファクトの合成条件を満たしていません (パスト・コア2枚、またはパスト・コアとフューチャー・コアが1枚ずつ必要です)。");
+      }
+    } else if (targetArtifactId === "attack_artifact") {
+      // Rule 1: 2 Future Cores
+      const isTwoFutureCore = (materialsToConsume["future_core"] || 0) === 2 && Object.keys(materialsToConsume).length === 1;
+      // Rule 2: 1 Past Core and 1 Future Core
+      const isOneEachCore = (materialsToConsume["past_core"] || 0) === 1 && (materialsToConsume["future_core"] || 0) === 1 && Object.keys(materialsToConsume).length === 2;
+
+      if (isTwoFutureCore || isOneEachCore) {
+        producedArtifact = "attack_artifact";
+        actionMessage = isTwoFutureCore ? `フューチャー・コア2枚を合成しアタックアーティファクトを生成` : `パスト・コアとフューチャー・コアを合成しアタックアーティファクトを生成`;
+      } else {
+        canSynthesize = false;
+        setSynthesisError("アタックアーティファクトの合成条件を満たしていません (フューチャー・コア2枚、またはパスト・コアとフューチャー・コアが1枚ずつ必要です)。");
+      }
+    } else if (targetArtifactId === "destroy_artifact_alpha") {
+        const intermediateArtifacts = ["castle_artifact", "attack_artifact"];
+        const oneCostArtifacts = ["puppet", "enhanced_puppet", "past_core", "future_core"];
+
+        const selectedIntermediateId = Object.keys(materialsToConsume).find(id => intermediateArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
+        const selectedOneCostId = Object.keys(materialsToConsume).find(id => oneCostArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
+
+        if (selectedIntermediateId && selectedOneCostId && Object.keys(materialsToConsume).length === 2) {
+            producedArtifact = "destroy_artifact_alpha";
+            actionMessage = `${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === selectedIntermediateId)?.name}と${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === selectedOneCostId)?.name}を合成しデストロイアーティファクトαを生成`;
+        } else { canSynthesize = false; setSynthesisError("デストロイアーティファクトαの合成条件を満たしていません。"); }
+    } else if (targetArtifactId === "destroy_artifact_beta") {
+        const intermediateArtifacts = ["castle_artifact", "attack_artifact"];
+        const oneCostArtifacts = ["puppet", "enhanced_puppet", "past_core", "future_core"];
+
+        const selectedIntermediateId = Object.keys(materialsToConsume).find(id => intermediateArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
+        // Count 1-cost materials, allowing for duplicates if multiple copies of the same token are used
+        let oneCostMaterialCount = 0;
+        for (const id of oneCostArtifacts) {
+            oneCostMaterialCount += (materialsToConsume[id] || 0);
+        }
+
+        if (selectedIntermediateId && oneCostMaterialCount === 2 && Object.keys(materialsToConsume).length >= 2) { // Allow 2 or 3 keys if two 1-cost are same or different
+            producedArtifact = "destroy_artifact_beta";
+            actionMessage = `${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === selectedIntermediateId)?.name}と1コストアーティファクト2枚を合成しデストロイアーティファクトβを生成`;
+        } else { canSynthesize = false; setSynthesisError("デストロイアーティファクトβの合成条件を満たしていません。"); }
+    } else if (targetArtifactId === "destroy_artifact_gamma") {
+        const intermediateArtifacts = ["castle_artifact", "attack_artifact"]; // 3-cost base
+        const otherMaterials = ["castle_artifact", "attack_artifact", "destroy_artifact_alpha", "destroy_artifact_beta", "destroy_artifact_gamma"]; // 3-cost or 5-cost other
+
+        const selectedIntermediateBaseId = Object.keys(materialsToConsume).find(id => intermediateArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
+        const selectedOtherMaterialId = Object.keys(materialsToConsume).find(id => id !== selectedIntermediateBaseId && otherMaterials.includes(id) && (materialsToConsume[id] || 0) === 1);
+
+        if (selectedIntermediateBaseId && selectedOtherMaterialId && Object.keys(materialsToConsume).length === 2) {
+            producedArtifact = "destroy_artifact_gamma";
+            actionMessage = `${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === selectedIntermediateBaseId)?.name}と${NEMESIS_ARTIFACT_TOKENS.find(t => t.id === selectedOtherMaterialId)?.name}を合成しデストロイアーティファクトγを生成`;
+        } else { canSynthesize = false; setSynthesisError("デストロイアーティファクトγの合成条件を満たしていません。"); }
+    } else if (targetArtifactId === "exceed_artifact_omega") {
+        // New rule: requires 1 Alpha, 1 Beta, 1 Gamma
+        if ((materialsToConsume["destroy_artifact_alpha"] || 0) === 1 &&
+            (materialsToConsume["destroy_artifact_beta"] || 0) === 1 &&
+            (materialsToConsume["destroy_artifact_gamma"] || 0) === 1 &&
+            Object.keys(materialsToConsume).length === 3) {
+            producedArtifact = "exceed_artifact_omega";
+            actionMessage = `デストロイアーティファクトα、β、γを合成しイクシードアーティファクトΩを生成`;
+        } else { canSynthesize = false; setSynthesisError("イクシードアーティファクトΩの合成条件を満たしていません (デストロイα、β、γがそれぞれ1枚ずつ必要です)。"); }
+    }
+
+    if (canSynthesize && producedArtifact) {
+      let currentHandCount = handCount;
+      // Consume materials
+      for (const [materialId, count] of Object.entries(materialsToConsume)) {
+        setArtifactCount(materialId, getArtifactCount(materialId) - count);
+        currentHandCount -= count;
+      }
+      // Produce artifacts
+      setArtifactCount(producedArtifact, getArtifactCount(producedArtifact) + 1);
+      currentHandCount += 1; // Always produce 1 artifact
+
+      setHandCount(currentHandCount); // Update total hand count
+      setGameHistory(prev => [...prev, { turn, action: actionMessage, pp: ppCurrent, hand: currentHandCount }]);
+      setIsSynthesisModalOpened(false);
+      setSelectedMaterials({}); // Clear selected materials after successful synthesis
+      setSynthesisError("");
+    } else {
+      // Error already set by synthesis rule checks
+    }
+  }, [getArtifactCount, setArtifactCount, handCount, turn, ppCurrent]);
+
+
+  const openSynthesisModal = useCallback((targetId: string) => {
+    setSynthesisTarget(targetId);
+    setSelectedMaterials({}); // Reset selected materials
+    setSynthesisError(""); // Clear previous errors
+
+    // Auto-selection for Castle/Attack Synthesis
+    if (targetId === "castle_artifact") {
+      const canTwoPastCore = pastCoreCount >= 2;
+      const canOneEachCore = pastCoreCount >= 1 && futureCoreCount >= 1;
+
+      // Pre-select if only one option is available, but still open modal
+      if (canTwoPastCore && !canOneEachCore) {
+        setSelectedMaterials({ "past_core": 2 });
+      } else if (!canTwoPastCore && canOneEachCore) {
+        setSelectedMaterials({ "past_core": 1, "future_core": 1 });
+      }
+      // If both are possible, no pre-selection, let user choose
+      // If neither is possible, setSelectedMaterials remains empty, and the button should be disabled
+    } else if (targetId === "attack_artifact") {
+      const canTwoFutureCore = futureCoreCount >= 2;
+      const canOneEachCore = pastCoreCount >= 1 && futureCoreCount >= 1;
+
+      // Pre-select if only one option is available, but still open modal
+      if (canTwoFutureCore && !canOneEachCore) {
+        setSelectedMaterials({ "future_core": 2 });
+      } else if (!canTwoFutureCore && canOneEachCore) {
+        setSelectedMaterials({ "past_core": 1, "future_core": 1 });
+      }
+    }
+    // Auto-selection for Destroy artifacts' 3-cost material
+    else if (["destroy_artifact_alpha", "destroy_artifact_beta", "destroy_artifact_gamma"].includes(targetId)) {
+      const available3Cost = [];
+      if (castleArtifactCount > 0) available3Cost.push("castle_artifact");
+      if (attackArtifactCount > 0) available3Cost.push("attack_artifact");
+
+      let initialSelectedMaterials: Record<string, number> = {};
+      if (available3Cost.length === 1) {
+        initialSelectedMaterials[available3Cost[0]] = 1;
+      }
+      setSelectedMaterials(initialSelectedMaterials);
+    }
+    // Auto-synthesis for Exceed Omega
+    else if (targetId === "exceed_artifact_omega") {
+      const currentDestroyAlpha = destroyArtifactAlphaCount || 0;
+      const currentDestroyBeta = destroyArtifactBetaCount || 0;
+      const currentDestroyGamma = destroyArtifactGammaCount || 0;
+
+      // New auto-synthesis: if exactly 1 of each (Alpha, Beta, Gamma) is available
+      if (currentDestroyAlpha === 1 && currentDestroyBeta === 1 && currentDestroyGamma === 1) {
+        executeSynthesis({ "destroy_artifact_alpha": 1, "destroy_artifact_beta": 1, "destroy_artifact_gamma": 1 }, targetId);
+        return;
+      }
+      // Pre-select available destroy artifacts if not auto-synthesizing
+      const preselected: Record<string, number> = {};
+      if (currentDestroyAlpha > 0) preselected["destroy_artifact_alpha"] = 1;
+      if (currentDestroyBeta > 0) preselected["destroy_artifact_beta"] = 1;
+      if (currentDestroyGamma > 0) preselected["destroy_artifact_gamma"] = 1;
+      setSelectedMaterials(preselected);
+    }
+
+    setIsSynthesisModalOpened(true); // Open modal if auto-synthesis not met or partial auto-selection
+  }, [pastCoreCount, futureCoreCount, castleArtifactCount, attackArtifactCount, destroyArtifactAlphaCount, destroyArtifactBetaCount, destroyArtifactGammaCount, executeSynthesis]);
+
+
+  const handleMaterialSelection = useCallback((tokenId: string, checked: boolean, isBaseMaterial: boolean = false) => {
+    setSelectedMaterials(prev => {
+      const newMaterials: Record<string, number> = { ...prev };
+
+      if (isBaseMaterial) {
+        // For base material radio groups (e.g., 3-cost for Destroy, core combinations for Castle/Attack)
+        // Clear previous selection for this group and set the new one
+        const currentBaseMaterialIds = ["castle_artifact", "attack_artifact", "past_core_x2", "future_core_x2", "past_future_x1"];
+        currentBaseMaterialIds.forEach(id => {
+          // Special handling to remove individual cores if a combination was previously selected
+          if (id === "past_core_x2" || id === "past_future_x1") delete newMaterials["past_core"];
+          if (id === "future_core_x2" || id === "past_future_x1") delete newMaterials["future_core"];
+          delete newMaterials[id]; // Remove the combination ID
+        });
+
+        if (checked) {
+          // Special handling for core combinations to store individual cores
+          if (tokenId === "past_core_x2") {
+            newMaterials["past_core"] = 2;
+          } else if (tokenId === "future_core_x2") {
+            newMaterials["future_core"] = 2;
+          } else if (tokenId === "past_future_x1") {
+            newMaterials["past_core"] = 1;
+            newMaterials["future_core"] = 1;
+          } else {
+            newMaterials[tokenId] = 1;
+          }
+        }
+      } else {
+        // For other materials (e.g., 1-cost for Destroy, or individual Destroy for Omega)
+        if (checked) {
+          newMaterials[tokenId] = (newMaterials[tokenId] || 0) + 1; // Allow multiple if needed (e.g., for Destroy Beta)
+        } else {
+          newMaterials[tokenId] = (newMaterials[tokenId] || 0) - 1;
+          if (newMaterials[tokenId] <= 0) {
+            delete newMaterials[tokenId];
+          }
+        }
+      }
+      return newMaterials;
+    });
+  }, []);
+
+
+  // Filter available materials for the synthesis modal
+  const availableMaterials = useMemo(() => {
+    const materials: Array<any> = []; // Explicitly type materials array
+    NEMESIS_ARTIFACT_TOKENS.forEach(token => {
+      const count = getArtifactCount(token.id);
+      if (count > 0) {
+        materials.push({ ...token, currentCount: count }); // Add currentCount for display
+      }
+    });
+    return materials;
+  }, [getArtifactCount]);
+
+  // Generate combinations for Destroy Beta
+  const generateDestroyBetaCombinations = useCallback(() => {
+    const oneCostTokens = availableMaterials.filter(t => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(t.id));
+    const combinations: Array<{ id: string; materials: string[]; name: string }> = []; // Explicitly type combinations array
+
+    // Flatten the available 1-cost tokens into an array of individual tokens
+    const individualOneCostTokens: string[] = []; // Explicitly type individualOneCostTokens array
+    oneCostTokens.forEach(token => {
+      for (let i = 0; i < token.currentCount; i++) {
+        individualOneCostTokens.push(token.id);
+      }
+    });
+
+    if (individualOneCostTokens.length < 2) return []; // Need at least two 1-cost tokens
+
+    for (let i = 0; i < individualOneCostTokens.length; i++) {
+      for (let j = i + 1; j < individualOneCostTokens.length; j++) {
+        const combo = [individualOneCostTokens[i], individualOneCostTokens[j]].sort(); // Sort to ensure uniqueness
+        const comboId = combo.join('-'); // Unique ID for the combination
+        const comboNames = combo.map(id => NEMESIS_ARTIFACT_TOKENS.find(t => t.id === id)?.name).join('と');
+        combinations.push({ id: comboId, materials: combo, name: comboNames });
+      }
+    }
+    // Filter out duplicate combinations (e.g., [puppet, puppet] if only one puppet exists)
+    // This simple combination generation might produce duplicates if multiple copies of same token are available.
+    // Need to ensure distinct pairs of *actual tokens*, not just token types.
+    // The current approach using `individualOneCostTokens` should handle this correctly.
+    // Filter out combinations where a token is used more than its available count.
+    const uniqueCombinations = Array.from(new Set(combinations.map(c => c.id))).map(id => combinations.find(c => c.id === id)) as Array<{ id: string; materials: string[]; name: string }>;
+
+    return uniqueCombinations;
+  }, [availableMaterials]);
+
+
+  // --- Render ---
+
+  // Get current leader label for display
+  const currentLeaderLabel = useMemo(() => {
+    const foundLeader = LEADERS.find(l => l.value === leader);
+    return foundLeader ? foundLeader.label : "リーダーを選択";
+  }, [leader]);
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0d1117 100%)",
+        color: "var(--mantine-color-blue-1)",
+      }}
+    >
+      <Group align="flex-start" wrap="nowrap" gap="xl" p="xl">
+        {/* 左側：入力エリア */}
+        <Card
+          shadow="xl"
+          withBorder
+          style={{
+            minWidth: 350,
+            backgroundColor: "var(--mantine-color-dark-8)",
+            borderColor: "var(--mantine-color-blue-9)",
+          }}
+        >
+          <Stack gap="lg">
+            <Group justify="space-between"> {/* Added justify="space-between" to align title and button */}
+              <Group>
+                <IconBrain size={24} color="var(--mantine-color-blue-4)" />
+                <Title order={2} c="blue.3">
+                  対戦状況
+                </Title>
+              </Group>
+              <ActionIcon
+                variant="filled"
+                color="red"
+                size="lg"
+                radius="xl"
+                onClick={resetGameStates}
+                title="全ての情報をリセット"
+                styles={{
+                  root: {
+                    "&:hover": {
+                      backgroundColor: "var(--mantine-color-red-7)",
+                    },
+                  },
+                }}
+              >
+                <IconRefresh size={20} />
+              </ActionIcon>
+            </Group>
+
+            <Card withBorder p="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+              <Text size="sm" c="blue.4" mb="xs">
+                リーダーと先後
+              </Text>
+              <Group gap="md">
+                {/* Leader selection card to open modal */}
+                <Card
+                  withBorder
+                  p="xs"
+                  onClick={() => setIsLeaderModalOpened(true)}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: 'var(--mantine-color-dark-6)',
+                    borderColor: 'var(--mantine-color-blue-7)',
+                    flexGrow: 1,
+                  }}
+                >
+                  <Group gap="xs" justify="space-between">
+                    <Text size="sm" c="blue.2" fw={500}>
+                      {currentLeaderLabel}
+                    </Text>
+                    <IconUsers size={20} color="var(--mantine-color-blue-4)" />
+                  </Group>
+                </Card>
+
+                <Radio.Group value={firstOrSecond} color="blue" onChange={setFirstOrSecond}>
+                  <Group gap="md">
+                    <Radio value="first" label={<Text color="blue">先手</Text>} color="blue" />
+                    <Radio value="second" label={<Text color="blue">後手</Text>} color="blue" />
+                  </Group>
+                </Radio.Group>
+              </Group>
+            </Card>
+
+            <Button
+              onClick={advanceTurn}
+              size="md"
+              variant="gradient"
+              gradient={{ from: "blue.8", to: "blue.6" }}
+              leftSection={<IconSword size={16} />}
+              styles={{
+                root: {
+                  "&[data-disabled]": {
+                    backgroundColor: "var(--mantine-color-dark-9) !important",
+                    color: "var(--mantine-color-dark-5) !important",
+                    cursor: "not-allowed",
+                  },
+                },
+              }}
+            >
+              次ターンへ →
+            </Button>
+
+            <DotSelector value={turn} max={10} onChange={handleTurnChange} label="ターン数" />
+            <DotSelector
+              value={handCount}
+              max={9}
+              onChange={(val: number) => {
+                setHandCount(val);
+                // Note: When handCount is manually reduced, if totalKnownArtifacts exceeds new handCount,
+                // it's up to the user to manually adjust artifact counts using +/- buttons.
+                // A more complex solution would involve prompting the user to discard artifacts.
+              }}
+              label="相手の手札枚数"
+              knownCount={totalKnownArtifacts} // Reflect total known artifacts
+              knownColor={leader === "elf" ? "green" : "cyan"} // Different color for Nemesis artifacts
+            />
+            <DotSelector
+              value={ppCurrent}
+              max={ppMax}
+              onChange={(val: number) => setPpCurrent(Math.min(val, ppMax))}
+              label={`現在のPP（上限: ${ppMax}）`}
+            />
+
+            <Group wrap="nowrap">
+              {leader === "dragon" && (
+                <>
+                  <Button
+                    onClick={handlePpMaxIncrease}
+                    size="xs"
+                    variant="light"
+                    color="blue"
+                    styles={{
+                      root: {
+                        "&[data-disabled]": {
+                          backgroundColor: "var(--mantine-color-dark-9) !important",
+                          color: "var(--mantine-color-dark-5) !important",
+                          cursor: "not-allowed",
+                        },
+                      },
+                    }}
+                  >
+                    PP上限 +1
+                  </Button>
+                  <Button
+                    onClick={handlePpMaxDecrease}
+                    color="red"
+                    size="xs"
+                    variant="light"
+                    styles={{
+                      root: {
+                        "&[data-disabled]": {
+                          backgroundColor: "var(--mantine-color-dark-9) !important",
+                          color: "var(--mantine-color-dark-5) !important",
+                          cursor: "not-allowed",
+                        },
+                      },
+                    }}
+                  >
+                    PP上限 -1
+                  </Button>
+                </>
+              )}
+
+              {firstOrSecond === "second" && (
+                <Switch
+                  label={<Text color="blue">エクストラPP</Text>}
+                  checked={turnPpBonus === 1}
+                  color="blue"
+                  onChange={(e) => {
+                    const checked = e.currentTarget.checked
+                    setTurnPpBonus(checked ? 1 : 0)
+                    setPpCurrent((prev) => Math.min(prev + (checked ? 1 : -1), ppMax))
+                    setExtraPPUsedThisTurn(!checked);
+                  }}
+                />
+              )}
+            </Group>
+
+            <Grid>
+              <Grid.Col span={6}>
+                <Card withBorder padding="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                  <Group gap="xs" wrap="nowrap">
+                    <DotSelector value={ep} max={2} onChange={setEp} disabled={!isEpUsable || evolveUsedThisTurn} label="EP" />
+                    <Button
+                      onClick={() => {
+                        setEp((v) => Math.max(0, v - 1))
+                        setEvolveUsedThisTurn(true)
+                      }}
+                      disabled={ep === 0 || evolveUsedThisTurn || !isEpUsable}
+                      size="sm"
+                      variant="filled"
+                      color="blue"
+                      styles={{
+                        root: {
+                          "&[data-disabled]": {
+                            backgroundColor: "var(--mantine-color-dark-9) !important",
+                            color: "var(--mantine-color-dark-5) !important",
+                            cursor: "not-allowed",
+                          },
+                        },
+                      }}
+                    >
+                      使用
+                    </Button>
+                  </Group>
+                </Card>
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <Card withBorder padding="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                  <Group gap="xs" wrap="nowrap">
+                    <DotSelector value={sep} max={2} onChange={setSep} disabled={!isSepUsable || evolveUsedThisTurn} label="SEP" />
+                    <Button
+                      onClick={() => {
+                        setSep((v) => Math.max(0, v - 1))
+                        setEvolveUsedThisTurn(true)
+                      }}
+                      disabled={sep === 0 || evolveUsedThisTurn || !isSepUsable}
+                      size="sm"
+                      variant="filled"
+                      color="blue"
+                      styles={{
+                        root: {
+                          "&[data-disabled]": {
+                            backgroundColor: "var(--mantine-color-dark-9) !important",
+                            color: "var(--mantine-color-dark-5) !important",
+                            cursor: "not-allowed",
+                          },
+                        },
+                      }}
+                    >
+                      使用
+                    </Button>
+                  </Group>
+                </Card>
+              </Grid.Col>
+            </Grid>
+          </Stack>
+        </Card>
+
+        {/* 右側：分析エリア */}
+        <Card
+          shadow="xl"
+          withBorder
+          style={{
+            flex: 1,
+            backgroundColor: "var(--mantine-color-dark-8)",
+            borderColor: "var(--mantine-color-blue-9)",
+          }}
+        >
+          <Tabs defaultValue="removal" color="blue">
+            <Tabs.List style={{ color: "white" }}>
+              <Tabs.Tab
+                value="removal"
+                leftSection={<IconSword size={16} />}
+                style={{ color: "white" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
+              >
+                除去カード
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="tokens"
+                leftSection={<IconShield size={16} />}
+                style={{ color: "white" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
+              >
+                トークン管理
+              </Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="removal" pt="md">
+              <Stack gap="md">
+                <Title order={3} c="blue.3">
+                  使用可能な除去カード
+                </Title>
+                <ScrollArea h={500}>
+                  <Stack gap="sm">
+                    {filteredCards.length > 0 ? (
+                      filteredCards.map((card) => (
+                        <RemovalCardBlock
+                          key={card.id}
+                          card={card}
+                          ppCurrent={ppCurrent}
+                          ppMax={ppMax}
+                          onUseCard={handleUseCard}
+                          actionableEffect={card.actionableEffect} // Pass the actionable effect
+                        />
+                      ))
+                    ) : (
+                      <Text c="blue.4">現在使用可能な除去カードはありません。</Text>
+                    )}
+                  </Stack>
+                </ScrollArea>
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="tokens" pt="md">
+              <Stack gap="md">
+                <Title order={3} c="blue.3">
+                  トークン・特殊効果メモ
+                </Title>
+                {leader === "elf" ? (
+                  <Stack gap="md">
+                    <Card withBorder style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                      <Group justify="space-between" wrap="nowrap">
+                        <Group>
+                          <Text size="sm" c="blue.4">
+                            フェアリー
+                          </Text>
+                          <Badge color="green" variant="light">
+                            {fairyCount}枚
+                          </Badge>
+                        </Group>
+                        <ActionIcon
+                          variant="light"
+                          onClick={() => setShowFairyDetails((o) => !o)}
+                          color="blue"
+                          size="md"
+                        >
+                          {showFairyDetails ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
+                        </ActionIcon>
+                      </Group>
+                      <Collapse in={showFairyDetails}>
+                        <Stack gap="xs" mt="md" style={{ borderTop: '1px solid var(--mantine-color-dark-5)', paddingTop: '10px' }}>
+                          <Text size="sm" c="blue.4" mb="xs">
+                            フェアリーの効果:
+                          </Text>
+                          <Text size="xs" c="dark.3">
+                            コスト: 1
+                            <br />攻撃力: 1
+                            <br />体力: 1
+                            <br />効果: 突進
+                          </Text>
+                        </Stack>
+                      </Collapse>
+                    </Card>
+                    <DotSelector
+                      value={fairyCount}
+                      max={handCount} // フェアリーの最大数は手札枚数まで
+                      onChange={(val: number) => setFairyCount(Math.min(val, handCount))} // 手札枚数を超えないように調整
+                      label="確定フェアリー数"
+                    />
+                  </Stack>
+                ) : leader === "nemesis" ? (
+                  <Stack gap="md">
+                    <Text size="sm" c="blue.4" mb="xs">
+                      ネメシスアーティファクトトークン
+                    </Text>
+                    <Grid gutter="xs">
+                      {/* 操り人形、強化型操り人形 */}
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "puppet")!}
+                          count={puppetCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "enhanced_puppet")!}
+                          count={enhancedPuppetCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+
+                      {/* パストコア、フューチャーコア */}
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "past_core")!}
+                          count={pastCoreCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "future_core")!}
+                          count={futureCoreCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+
+                      {/* キャッスルアーティファクト、アタックアーティファクト */}
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "castle_artifact")!}
+                          count={castleArtifactCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                      <Grid.Col span={6}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "attack_artifact")!}
+                          count={attackArtifactCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+
+                      {/* デストロイアーティファクトα、β、γ */}
+                      <Grid.Col span={4}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "destroy_artifact_alpha")!}
+                          count={destroyArtifactAlphaCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "destroy_artifact_beta")!}
+                          count={destroyArtifactBetaCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "destroy_artifact_gamma")!}
+                          count={destroyArtifactGammaCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+
+                      {/* イクシードアーティファクトΩ */}
+                      <Grid.Col span={12}>
+                        <NemesisTokenCard
+                          token={NEMESIS_ARTIFACT_TOKENS.find(t => t.id === "exceed_artifact_omega")!}
+                          count={exceedArtifactOmegaCount}
+                          handleArtifactCountChange={handleArtifactCountChange}
+                          handCount={handCount}
+                        />
+                      </Grid.Col>
+                    </Grid>
+
+                    {/* 合成ボタンのセクション */}
+                    <Title order={4} c="blue.3" mt="md">
+                      アーティファクト合成
+                    </Title>
+                    <Group grow>
+                      <Button
+                        onClick={() => openSynthesisModal("castle_artifact")}
+                        disabled={!(pastCoreCount >= 2 || (pastCoreCount >= 1 && futureCoreCount >= 1))}
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "teal.8", to: "teal.6" }}
+                        leftSection={<IconBoxMultiple size={16} />}
+                      >
+                        キャッスル合成
+                      </Button>
+                      <Button
+                        onClick={() => openSynthesisModal("attack_artifact")}
+                        disabled={!(futureCoreCount >= 2 || (pastCoreCount >= 1 && futureCoreCount >= 1))}
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "teal.8", to: "teal.6" }}
+                        leftSection={<IconBoxMultiple size={16} />}
+                      >
+                        アタック合成
+                      </Button>
+                    </Group>
+                    <Group grow>
+                      <Button
+                        onClick={() => openSynthesisModal("destroy_artifact_alpha")}
+                        disabled={!(((castleArtifactCount || 0) + (attackArtifactCount || 0)) >= 1 && ((puppetCount || 0) + (enhancedPuppetCount || 0) + (pastCoreCount || 0) + (futureCoreCount || 0)) >= 1)}
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "orange.8", to: "orange.6" }}
+                        leftSection={<IconBoxMultiple size={16} />}
+                      >
+                        デストロイα合成
+                      </Button>
+                      <Button
+                        onClick={() => openSynthesisModal("destroy_artifact_beta")}
+                        disabled={!(((castleArtifactCount || 0) + (attackArtifactCount || 0)) >= 1 && ((puppetCount || 0) + (enhancedPuppetCount || 0) + (pastCoreCount || 0) + (futureCoreCount || 0)) >= 2)}
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "orange.8", to: "orange.6" }}
+                        leftSection={<IconBoxMultiple size={16} />}
+                      >
+                        デストロイβ合成
+                      </Button>
+                      <Button
+                        onClick={() => openSynthesisModal("destroy_artifact_gamma")}
+                        disabled={!(
+                            (castleArtifactCount >= 2) ||
+                            (attackArtifactCount >= 2) ||
+                            (castleArtifactCount >= 1 && attackArtifactCount >= 1) ||
+                            (
+                                ((castleArtifactCount || 0) + (attackArtifactCount || 0)) >= 1 &&
+                                ((destroyArtifactAlphaCount || 0) + (destroyArtifactBetaCount || 0) + (destroyArtifactGammaCount || 0)) >= 1
+                            )
+                        )}
+                        size="sm"
+                        variant="gradient"
+                        gradient={{ from: "orange.8", to: "orange.6" }}
+                        leftSection={<IconBoxMultiple size={16} />}
+                      >
+                        デストロイγ合成
+                      </Button>
+                    </Group>
+                    <Button
+                      onClick={() => openSynthesisModal("exceed_artifact_omega")}
+                      disabled={!((destroyArtifactAlphaCount || 0) >= 1 && (destroyArtifactBetaCount || 0) >= 1 && (destroyArtifactGammaCount || 0) >= 1)}
+                      size="sm"
+                      variant="gradient"
+                      gradient={{ from: "grape.8", to: "grape.6" }}
+                      leftSection={<IconBoxMultiple size={16} />}
+                    >
+                      イクシードΩ合成
+                    </Button>
+
+                  </Stack>
+                ) : (
+                  <Text c="blue.4">このクラスには特定のトークン管理機能はありません。</Text>
+                )}
+                <Textarea
+                  placeholder="生成されたトークンや特殊効果について記録..."
+                  value={tokenNotes}
+                  onChange={(e) => setTokenNotes(e.currentTarget.value)}
+                  minRows={4}
+                  maxRows={10}
+                  autosize
+                  styles={{
+                    input: {
+                      backgroundColor: "var(--mantine-color-dark-7)",
+                      color: "var(--mantine-color-blue-2)",
+                      border: "1px solid var(--mantine-color-dark-4)",
+                    },
+                  }}
+                />
+              </Stack>
+            </Tabs.Panel>
+          </Tabs>
+        </Card>
+      </Group>
+
+      {/* Leader Selection Modal */}
+      <Modal
+        opened={isLeaderModalOpened}
+        onClose={() => setIsLeaderModalOpened(false)}
+        title={<Title order={3} c="blue.3">リーダーを選択</Title>}
+        centered
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        styles={{
+          content: { backgroundColor: "var(--mantine-color-dark-8)", borderColor: "var(--mantine-color-blue-9)" },
+          header: { backgroundColor: "var(--mantine-color-dark-8)", borderBottom: '1px solid var(--mantine-color-dark-6)' },
+          title: { color: "var(--mantine-color-blue-3)" },
+          close: { color: "var(--mantine-color-blue-3)" },
+        }}
+      >
+        <Grid gutter="md">
+          {LEADERS.map((leaderOption) => (
+            <Grid.Col span={6} key={leaderOption.value}>
+              <Card
+                shadow="sm"
+                withBorder
+                p="md"
+                onClick={() => {
+                  const newLeader = leaderOption.value;
+                  setLeader(newLeader);
+                  resetGameStates(); // Reset all other game states
+                  setIsLeaderModalOpened(false); // Close modal on selection
+                }}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: leaderOption.value === leader ? 'var(--mantine-color-blue-9)' : 'var(--mantine-color-dark-7)',
+                  borderColor: leaderOption.value === leader ? 'var(--mantine-color-blue-7)' : 'var(--mantine-color-dark-5)',
+                  textAlign: 'center',
+                  transition: 'background-color 0.2s, border-color 0.2s',
+                  '&:hover': {
+                    backgroundColor: leaderOption.value === leader ? 'var(--mantine-color-blue-8)' : 'var(--mantine-color-dark-6)',
+                  },
+                }}
+              >
+                <Text size="lg" fw={700} c={leaderOption.value === leader ? 'white' : 'blue.2'}>
+                  {leaderOption.label}
+                </Text>
+              </Card>
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Modal>
+
+      {/* Synthesis Material Selection Modal */}
+      <Modal
+        opened={isSynthesisModalOpened}
+        onClose={() => {
+            setIsSynthesisModalOpened(false);
+            setSelectedMaterials({}); // Reset selected materials on close
+            setSynthesisError(""); // Clear errors on close
+        }}
+        title={<Title order={3} c="blue.3">素材を選択して合成</Title>}
+        centered
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        styles={{
+          content: { backgroundColor: "var(--mantine-color-dark-8)", borderColor: "var(--mantine-color-blue-9)" },
+          header: { backgroundColor: "var(--mantine-color-dark-8)", borderBottom: '1px solid var(--mantine-color-dark-6)' },
+          title: { color: "var(--mantine-color-blue-3)" },
+          close: { color: "var(--mantine-color-blue-3)" },
+        }}
+      >
+        <Stack gap="md">
+          <Text c="blue.4">
+            合成対象: {NEMESIS_ARTIFACT_TOKENS.find(t => t.id === synthesisTarget)?.name}
+          </Text>
+          {synthesisError && (
+            <Text c="red.5" size="sm" mt="xs">
+              エラー: {synthesisError}
+            </Text>
+          )}
+
+          {/* Conditional rendering for different synthesis types */}
+          {synthesisTarget === "castle_artifact" && (
+            <Stack>
+              <Text c="blue.4">合成素材:</Text>
+              <Radio.Group
+                value={
+                  (selectedMaterials["past_core"] === 2 && Object.keys(selectedMaterials).length === 1) ? "past_core_x2" :
+                  (selectedMaterials["past_core"] === 1 && selectedMaterials["future_core"] === 1 && Object.keys(selectedMaterials).length === 2) ? "past_future_x1" : ""
+                }
+                onChange={(value) => {
+                  if (value === "past_core_x2") {
+                    setSelectedMaterials({ "past_core": 2 });
+                  } else if (value === "past_future_x1") {
+                    setSelectedMaterials({ "past_core": 1, "future_core": 1 });
+                  }
+                }}
+              >
+                <Stack>
+                  <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                    <Radio
+                      value="past_core_x2"
+                      label={`パスト・コア 2枚 (${pastCoreCount}枚所持)`}
+                      disabled={pastCoreCount < 2}
+                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                    />
+                  </Card>
+                  <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                    <Radio
+                      value="past_future_x1"
+                      label={`パスト・コア 1枚とフューチャー・コア 1枚 (${pastCoreCount}枚/ ${futureCoreCount}枚所持)`}
+                      disabled={!(pastCoreCount >= 1 && futureCoreCount >= 1)}
+                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                    />
+                  </Card>
+                </Stack>
+              </Radio.Group>
+            </Stack>
+          )}
+
+          {synthesisTarget === "attack_artifact" && (
+            <Stack>
+              <Text c="blue.4">合成素材:</Text>
+              <Radio.Group
+                value={
+                  (selectedMaterials["future_core"] === 2 && Object.keys(selectedMaterials).length === 1) ? "future_core_x2" :
+                  (selectedMaterials["past_core"] === 1 && selectedMaterials["future_core"] === 1 && Object.keys(selectedMaterials).length === 2) ? "past_future_x1" : ""
+                }
+                onChange={(value) => {
+                  if (value === "future_core_x2") {
+                    setSelectedMaterials({ "future_core": 2 });
+                  } else if (value === "past_future_x1") {
+                    setSelectedMaterials({ "past_core": 1, "future_core": 1 });
+                  }
+                }}
+              >
+                <Stack>
+                  <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                    <Radio
+                      value="future_core_x2"
+                      label={`フューチャー・コア 2枚 (${futureCoreCount}枚所持)`}
+                      disabled={futureCoreCount < 2}
+                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                    />
+                  </Card>
+                  <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                    <Radio
+                      value="past_future_x1"
+                      label={`パスト・コア 1枚とフューチャー・コア 1枚 (${pastCoreCount}枚/ ${futureCoreCount}枚所持)`}
+                      disabled={!(pastCoreCount >= 1 && futureCoreCount >= 1)}
+                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                    />
+                  </Card>
+                </Stack>
+              </Radio.Group>
+            </Stack>
+          )}
+
+          {synthesisTarget === "destroy_artifact_alpha" && (
+            <Stack>
+              <Text c="blue.4">3コストのアーティファクト (1枚):</Text>
+              <Radio.Group
+                value={Object.keys(selectedMaterials).find(id => ["castle_artifact", "attack_artifact"].includes(id)) || ""}
+                onChange={(value) => {
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    if (value) newMaterials[value] = 1;
+                    // Preserve 1-cost selection if exists
+                    const current1Cost = Object.keys(prev).find(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id));
+                    if (current1Cost) newMaterials[current1Cost] = prev[current1Cost];
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Group>
+                  {availableMaterials.filter(m => ["castle_artifact", "attack_artifact"].includes(m.id)).map(material => (
+                    <Card key={material.id} withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                      <Radio
+                        value={material.id}
+                        label={`${material.name} (${material.currentCount}枚)`}
+                        disabled={material.currentCount === 0}
+                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      />
+                    </Card>
+                  ))}
+                </Group>
+              </Radio.Group>
+
+              <Text c="blue.4" mt="md">1コストのアーティファクト (1枚):</Text>
+              <Radio.Group
+                value={Object.keys(selectedMaterials).find(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id)) || ""}
+                onChange={(value) => {
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    if (value) newMaterials[value] = 1;
+                    // Preserve 3-cost selection if exists
+                    const current3Cost = Object.keys(prev).find(id => ["castle_artifact", "attack_artifact"].includes(id));
+                    if (current3Cost) newMaterials[current3Cost] = prev[current3Cost];
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Grid>
+                  {availableMaterials.filter(m => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(m.id)).map(material => (
+                    <Grid.Col span={6} key={material.id}>
+                      <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                        <Radio
+                          value={material.id}
+                          label={`${material.name} (${material.currentCount}枚)`}
+                          disabled={material.currentCount === 0}
+                          styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        />
+                      </Card>
+                    </Grid.Col>
+                  ))}
+                </Grid>
+              </Radio.Group>
+            </Stack>
+          )}
+
+          {synthesisTarget === "destroy_artifact_beta" && (
+            <Stack>
+              <Text c="blue.4">3コストのアーティファクト (1枚):</Text>
+              <Radio.Group
+                value={Object.keys(selectedMaterials).find(id => ["castle_artifact", "attack_artifact"].includes(id)) || ""}
+                onChange={(value) => {
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    if (value) newMaterials[value] = 1;
+                    // Preserve 1-cost selections
+                    const current1Costs = Object.keys(prev).filter(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id));
+                    current1Costs.forEach(id => newMaterials[id] = prev[id]);
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Group>
+                  {availableMaterials.filter(m => ["castle_artifact", "attack_artifact"].includes(m.id)).map(material => (
+                    <Card key={material.id} withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                      <Radio
+                        value={material.id}
+                        label={`${material.name} (${material.currentCount}枚)`}
+                        disabled={material.currentCount === 0}
+                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      />
+                    </Card>
+                  ))}
+                </Group>
+              </Radio.Group>
+
+              <Text c="blue.4" mt="md">1コストのアーティファクト (2枚):</Text>
+              <Radio.Group
+                value={JSON.stringify(Object.keys(selectedMaterials).filter(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id)).sort()) || ""}
+                onChange={(value) => {
+                  const selectedCombo = JSON.parse(value);
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    // Preserve 3-cost selection
+                    const current3Cost = Object.keys(prev).find(id => ["castle_artifact", "attack_artifact"].includes(id));
+                    if (current3Cost) newMaterials[current3Cost] = prev[current3Cost];
+
+                    // Set 1-cost selections
+                    selectedCombo.forEach((id: string) => {
+                      newMaterials[id] = (newMaterials[id] || 0) + 1;
+                    });
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Grid>
+                  {generateDestroyBetaCombinations().map(combo => (
+                    <Grid.Col span={6} key={combo.id}>
+                      <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                        <Radio
+                          value={JSON.stringify(combo.materials)}
+                          label={combo.name}
+                          styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        />
+                      </Card>
+                    </Grid.Col>
+                  ))}
+                </Grid>
+              </Radio.Group>
+            </Stack>
+          )}
+
+          {synthesisTarget === "destroy_artifact_gamma" && (
+            <Stack>
+              <Text c="blue.4">3コストのアーティファクト (1枚):</Text>
+              <Radio.Group
+                value={Object.keys(selectedMaterials).find(id => ["castle_artifact", "attack_artifact"].includes(id)) || ""}
+                onChange={(value) => {
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    if (value) newMaterials[value] = 1;
+                    // Clear previous other material selection if it's the same as the new base
+                    const prevOtherMaterialId = Object.keys(prev).find(id => !["castle_artifact", "attack_artifact"].includes(id) && (NEMESIS_ARTIFACT_TOKENS.find(t => t.id === id)?.cost === 3 || NEMESIS_ARTIFACT_TOKENS.find(t => t.id === id)?.cost === 5));
+                    if (prevOtherMaterialId && prevOtherMaterialId !== value) { // Only preserve if not the new base
+                      newMaterials[prevOtherMaterialId] = prev[prevOtherMaterialId];
+                    }
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Group>
+                  {availableMaterials.filter(m => ["castle_artifact", "attack_artifact"].includes(m.id)).map(material => (
+                    <Card key={material.id} withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                      <Radio
+                        value={material.id}
+                        label={`${material.name} (${material.currentCount}枚)`}
+                        disabled={material.currentCount === 0}
+                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      />
+                    </Card>
+                  ))}
+                </Group>
+              </Radio.Group>
+
+              <Text c="blue.4" mt="md">3コストまたは5コストのアーティファクト (1枚):</Text>
+              <Radio.Group
+                value={Object.keys(selectedMaterials).find(id =>
+                  (["castle_artifact", "attack_artifact", "destroy_artifact_alpha", "destroy_artifact_beta", "destroy_artifact_gamma"].includes(id)) &&
+                  (id !== Object.keys(selectedMaterials).find(mid => ["castle_artifact", "attack_artifact"].includes(mid) && selectedMaterials[mid] === 1))
+                ) || ""}
+                onChange={(value) => {
+                  setSelectedMaterials(prev => {
+                    const newMaterials: Record<string, number> = {};
+                    // Preserve first 3-cost selection
+                    const first3Cost = Object.keys(prev).find(id => ["castle_artifact", "attack_artifact"].includes(id));
+                    if (first3Cost) newMaterials[first3Cost] = prev[first3Cost];
+                    if (value) newMaterials[value] = 1;
+                    return newMaterials;
+                  });
+                }}
+              >
+                <Grid>
+                  {availableMaterials.filter(m =>
+                    (["castle_artifact", "attack_artifact", "destroy_artifact_alpha", "destroy_artifact_beta", "destroy_artifact_gamma"].includes(m.id)) &&
+                    // Exclude the currently selected 3-cost base material if it's already selected
+                    !(Object.keys(selectedMaterials).find(id => ["castle_artifact", "attack_artifact"].includes(id)) === m.id && selectedMaterials[m.id] === 1)
+                  ).map(material => {
+                    const isDisabled = material.currentCount === 0;
+                    return (
+                      <Grid.Col span={6} key={material.id}>
+                        <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                          <Radio
+                            value={material.id}
+                            label={`${material.name} (${material.currentCount}枚)`}
+                            disabled={isDisabled}
+                            styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                          />
+                        </Card>
+                      </Grid.Col>
+                    );
+                  })}
+                </Grid>
+              </Radio.Group>
+            </Stack>
+          )}
+
+          {synthesisTarget === "exceed_artifact_omega" && (
+            <Stack>
+              <Text c="blue.4" mb="md">デストロイアーティファクトα、β、γをそれぞれ1枚ずつ消費します。</Text>
+              <Grid>
+                {availableMaterials.filter(m => ["destroy_artifact_alpha", "destroy_artifact_beta", "destroy_artifact_gamma"].includes(m.id)).map(material => (
+                  <Grid.Col span={6} key={material.id}>
+                    <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)", flex: 1 }}>
+                      <Checkbox
+                        checked={(selectedMaterials[material.id] || 0) > 0}
+                        onChange={(e) => handleMaterialSelection(material.id, e.currentTarget.checked)}
+                        label={`${material.name} (${material.currentCount}枚)`}
+                        disabled={material.currentCount === 0}
+                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      />
+                    </Card>
+                  </Grid.Col>
+                ))}
+              </Grid>
+            </Stack>
+          )}
+
+          <Button
+            onClick={() => executeSynthesis(selectedMaterials, synthesisTarget!)} // synthesisTargetがnullでないことを保証
+            disabled={
+              // General check: no materials selected
+              Object.keys(selectedMaterials).length === 0 ||
+              // Castle Artifact specific checks
+              (synthesisTarget === "castle_artifact" &&
+                !(
+                  (selectedMaterials["past_core"] === 2 && Object.keys(selectedMaterials).length === 1) ||
+                  (selectedMaterials["past_core"] === 1 && selectedMaterials["future_core"] === 1 && Object.keys(selectedMaterials).length === 2)
+                )
+              ) ||
+              // Attack Artifact specific checks
+              (synthesisTarget === "attack_artifact" &&
+                !(
+                  (selectedMaterials["future_core"] === 2 && Object.keys(selectedMaterials).length === 1) ||
+                  (selectedMaterials["past_core"] === 1 && selectedMaterials["future_core"] === 1 && Object.keys(selectedMaterials).length === 2)
+                )
+              ) ||
+              // Destroy Alpha specific checks
+              (synthesisTarget === "destroy_artifact_alpha" &&
+                !(
+                  Object.keys(selectedMaterials).some(id => ["castle_artifact", "attack_artifact"].includes(id)) &&
+                  Object.keys(selectedMaterials).some(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id)) &&
+                  Object.keys(selectedMaterials).length === 2
+                )
+              ) ||
+              // Destroy Beta specific checks (requires 1 3-cost and 2 1-cost)
+              (synthesisTarget === "destroy_artifact_beta" &&
+                !(
+                  Object.keys(selectedMaterials).some(id => ["castle_artifact", "attack_artifact"].includes(id)) &&
+                  (Object.keys(selectedMaterials).filter(id => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(id)).reduce((sum, id) => sum + (selectedMaterials[id] || 0), 0) === 2) &&
+                  Object.keys(selectedMaterials).length >= 2 // Can be 2 keys if two of same 1-cost, or 3 if two different 1-cost
+                )
+              ) ||
+              // Destroy Gamma specific checks (requires 1 3-cost base and 1 other 3-cost or 5-cost)
+              (synthesisTarget === "destroy_artifact_gamma" &&
+                !(
+                  Object.keys(selectedMaterials).some(id => ["castle_artifact", "attack_artifact"].includes(id)) &&
+                  Object.keys(selectedMaterials).some(id => id !== Object.keys(selectedMaterials).find(mid => ["castle_artifact", "attack_artifact"].includes(mid)) && (NEMESIS_ARTIFACT_TOKENS.find(t => t.id === id)?.cost === 3 || NEMESIS_ARTIFACT_TOKENS.find(t => t.id === id)?.cost === 5)) &&
+                  Object.keys(selectedMaterials).length === 2
+                )
+              ) ||
+              // Exceed Omega specific checks
+              (synthesisTarget === "exceed_artifact_omega" &&
+                !(
+                  (selectedMaterials["destroy_artifact_alpha"] || 0) === 1 &&
+                  (selectedMaterials["destroy_artifact_beta"] || 0) === 1 &&
+                  (selectedMaterials["destroy_artifact_gamma"] || 0) === 1 &&
+                  Object.keys(selectedMaterials).length === 3
+                )
+              )
+            }
+            size="md"
+            variant="gradient"
+            gradient={{ from: "blue.8", to: "blue.6" }}
+          >
+            合成実行
+          </Button>
+        </Stack>
+      </Modal>
+    </div>
+  )
+}
