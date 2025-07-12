@@ -2121,12 +2121,17 @@ export default function Home() {
         color: "var(--mantine-color-blue-1)",
       }}
     >
+      <Group align="flex-start" wrap="nowrap" gap="xl" p="sm">
+        <Title order={1} c="blue.1">
+            Shadowverse: Worlds Beyond - 盤面整理ツール
+        </Title>
+      </Group>
       <Group align="flex-start" wrap="nowrap" gap="xl" p="xl">
         {/* 左側：入力エリア */}
         <Card
           shadow="xl"
           withBorder
-          h={"90vh"}
+          h={"85vh"}
           style={{
             minWidth: 380,
             backgroundColor: "var(--mantine-color-dark-8)",
@@ -2361,7 +2366,7 @@ export default function Home() {
         <Card
           shadow="xl"
           withBorder
-          h={"90vh"}
+          h={"85vh"}
           style={{
             flex: 1,
             backgroundColor: "var(--mantine-color-dark-8)",
