@@ -24,6 +24,7 @@ import {
   HoverCard, // HoverCardをインポート
   Image,
   Container,
+  Box,
 } from "@mantine/core"
 import { IconCircleFilled, IconCircle, IconSword, IconShield, IconBrain, IconHistory, IconChevronDown, IconChevronUp, IconUsers, IconRefresh, IconPlus, IconMinus, IconBoxMultiple } from "@tabler/icons-react"
 
@@ -235,9 +236,624 @@ const REMOVAL_CARDS = [
     toughness: 4,
     effects: [
       { mode: "default", cost: 7, conditions: {}, effect: "自分のデッキから2枚引く。自分のリーダーを2回復。自分のPPを2回復" },
-      { mode: 'super_evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: "自分の場の他の進化前野フォロワーを1枚選ぶ。それは超進化する" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: "自分の場の他の進化前野フォロワーを1枚選ぶ。それは超進化する" },
     ],
     imageUrl: "/svwb_utilities/img/1/neutral/勇壮の堕天使・オリヴィエ.png", // Placeholder image
+  },
+  {
+    id: "elf1",
+    name: "アドエンチャーエルフ・メイ",
+    type: "follower",
+    leader: "elf",
+    baseCost: 1,
+    attack: 1,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: {}, effect: "【コンボ_3】相手の場のフォロワー1枚を選ぶ。それに3ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/アドエンチャーエルフ・メイ.png", // Placeholder image
+  },{
+    id: "elf2",
+    name: "虫の知らせ",
+    type: "spell",
+    leader: "elf",
+    baseCost: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: {}, effect: "自分の場のカード1枚を選ぶ。それを手札に戻す。相手の場のフォロワーからランダム1枚に2ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/虫の知らせ.png", // Placeholder image
+  },{
+    id: "elf3",
+    name: "ピュアクリスタリア・リリィ",
+    type: "follower",
+    leader: "elf",
+    baseCost: 2,
+    attack: 1,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【コンボ_3】相手の場のフォロワー1枚を選ぶ。それは体力1になる。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '自分のデッキから1枚を引く。相手の場のフォロワー1枚を選ぶ。それに1ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/ピュアクリスタリア・リリィ.png", // Placeholder image
+  },{
+    id: "elf4",
+    name: "殺戮のリノセウス",
+    type: "follower",
+    leader: "elf",
+    baseCost: 3,
+    attack: 0,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "これは+X/+0する。Xは自分の【コンボ】である。<br>【疾走】" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/殺戮のリノセウス.png", // Placeholder image
+  },{
+    id: "elf5",
+    name: "ビギンズブレイダー・アマツ",
+    type: "follower",
+    leader: "elf",
+    baseCost: 3,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "これは+X/+Xする。Xは自分の手札の妖精フォロワーの枚数である。<br>【守護】" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '「相手の場のフォロワーからランダム1枚に1ダメージ。」をX回行う。Xは自分の手札の妖精フォロワーの枚数である。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/ビギンズブレイダー・アマツ.png", // Placeholder image
+  },{
+    id: "elf6",
+    name: "薫交の天宮・バックウッド",
+    type: "follower",
+    leader: "elf",
+    baseCost: 5,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "自分のデッキから2枚を引く。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワーすべてにXダメージを割りふる。Xは自分の手札の枚数である。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/薫交の天宮・バックウッド.png", // Placeholder image
+  },{
+    id: "elf7",
+    name: "煌撃の戦士・ベイル",
+    type: "follower",
+    leader: "elf",
+    baseCost: 8,
+    attack: 4,
+    toughness: 4,
+    effects: [
+      { mode: "default", cost: 0, conditions: {}, effect: "手札で働く。自分のフォロワーが場を離れたとき、これのコストを-1する。<br>【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに4ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/elf/煌撃の戦士・ベイル.png", // Placeholder image
+  }, {
+    id: "witch1",
+    name: "ストームブラスト",
+    type: "spell",
+    leader: "witch",
+    baseCost: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: {}, effect: "Xは2から始まる。<br>【スペルブースト時】これのXを+1する。<br>相手の場のフォロワー1枚を選ぶ。それにXダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/ストームブラスト.png", // Placeholder image
+  },{
+    id: "witch2",
+    name: "アドラブルティーチャー・ミラ",
+    type: "follower",
+    leader: "witch",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "自分の手札すべては1回スペルブーストする。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに3ダメージ。自分の手札すべては1回スペルブーストする。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/アドラブルティーチャー・ミラ.png", // Placeholder image
+  },{
+    id: "witch3",
+    name: "成長したですぅ！",
+    type: "spell",
+    leader: "witch",
+    baseCost: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: { minTurn:4 }, effect: "自分のデッキから2枚を引く。相手の場のフォロワーからランダム1枚に2ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/成長したですぅ！.png", // Placeholder image
+  },{
+    id: "witch4",
+    name: "理光の証明",
+    type: "spell",
+    leader: "witch",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【モード】1つを選んでその能力が働く。<br>（1）自分の場の土の印を+4する。<br>（2）自分のリーダーを4回復。<br>（3）【土の秘術_3】相手の場のフォロワーすべてに4ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/理光の証明.png", // Placeholder image
+  },{
+    id: "witch5",
+    name: "イラプション",
+    type: "spell",
+    leader: "witch",
+    baseCost: 4,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "場のフォロワーすべてに2ダメージ。【土の秘術_1】自分のデッキから1枚を引く。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/イラプション.png", // Placeholder image
+  },{
+    id: "witch6",
+    name: "理光の天宮・エーデルワイス",
+    type: "follower",
+    leader: "witch",
+    baseCost: 4,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【土の秘術_2】これは進化する。<br>これが進化したとき、相手の場のフォロワーからランダム1枚に4ダメージ。自分のPPを2回復。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/理光の天宮・エーデルワイス.png", // Placeholder image
+  },{
+    id: "witch7",
+    name: "マナリアフレンズ・アン＆グレア",
+    type: "follower",
+    leader: "witch",
+    baseCost: 5,
+    attack: 4,
+    toughness: 4,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "『アンの大英霊』1枚を自分の場に出す。自分の手札すべては3回スペルブーストする。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに3ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/マナリアフレンズ・アン＆グレア.png", // Placeholder image
+  },{
+    id: "witch8",
+    name: "マナリアの学徒・ウィリアム",
+    type: "follower",
+    leader: "witch",
+    baseCost: 6,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "Xは0から始まる。<br>【スペルブースト時】これのXを+1する。<br>相手の場のフォロワーすべてにXダメージ。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '自分の手札すべては2回スペルブーストする。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/マナリアの学徒・ウィリアム.png", // Placeholder image
+  },{
+    id: "witch9",
+    name: "鬼呼びの術",
+    type: "spell",
+    leader: "witch",
+    baseCost: 7,
+    effects: [
+      { mode: "default", cost: 0, conditions: {}, effect: "【スペルブースト時】これのコストを-1する。<br>『式神暴鬼』1枚を自分の場に出す。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/鬼呼びの術.png", // Placeholder image
+  },{
+    id: "witch10",
+    name: "五行の果て・クオン",
+    type: "follower",
+    leader: "witch",
+    baseCost: 7,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "『式神天后』1枚と『式神暴鬼』1枚と『式神形代』を自分の場に出す。" },
+      { mode: "enhance", cost: 10, conditions: {}, effect: "【エンハンス_10】自分の式神フォロワーすべてを破壊。『式神貴人』1枚を自分の場に出す。" },
+      { mode: 'super_evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '自分の場の式神フォロワーを1枚選ぶ。それは【疾走】を持つ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/witch/五行の果て・クオン.png", // Placeholder image
+  },{
+    id: "dragon1",
+    name: "ドラゴニュートクラッシュ",
+    type: "spell",
+    leader: "dragon",
+    baseCost: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それに2ダメージ。" },
+      { mode: "awakening", cost: 1, conditions: { minPP: 7 }, effect: "2ダメージではなく4ダメージ。" }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/ドラゴニュートクラッシュ.png", // Placeholder image
+  },{
+    id: "dragon2",
+    name: "烈火のファイアリザード",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それに1ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/烈火のファイアリザード.png", // Placeholder image
+  },
+  {
+    id: "dragon3",
+    name: "風を駆る者・エイファ",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 3,
+    attack: 2,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【疾走】" },
+      { mode: "awakening", cost: 0, conditions: { minPP: 7 }, effect: "【覚醒】なら、これは【威圧】を持つ。" }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/風を駆る者・エイファ.png", // Placeholder image
+  },
+  {
+    id: "dragon4",
+    name: "栄弦の天宮・リュウフウ",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 4,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "awakening", cost: 0, conditions: { minPP: 7 }, effect: "【覚醒】なら、これは進化する。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: 'これが進化したとき、自分のPP最大値を+1する。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/栄弦の天宮・リュウフウ.png", // Placeholder image
+  },
+  {
+    id: "dragon5",
+    name: "駆け出しのドラゴンスレイヤー",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 4,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それを破壊。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/駆け出しのドラゴンスレイヤー.png", // Placeholder image
+  },
+  {
+    id: "dragon6",
+    name: "猛撃のドラゴンウォーリアー",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 4,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに4ダメージ。' },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '1枚を選ぶのではなくすべて。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/猛撃のドラゴンウォーリアー.png", // Placeholder image
+  },
+  {
+    id: "dragon7",
+    name: "海溝の大剣竜",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 5,
+    attack: 4,
+    toughness: 6,
+    effects: [
+      { mode: "awakening", cost: 0, conditions: { minPP: 7 }, effect: "【覚醒】なら、これは【疾走】を持つ。" }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/海溝の大剣竜.png", // Placeholder image
+  },
+  {
+    id: "dragon8",
+    name: "ディザスターブレス",
+    type: "spell",
+    leader: "dragon",
+    baseCost: 6,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "場のフォロワーすべてに5ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/ディザスターブレス.png", // Placeholder image
+  },
+  {
+    id: "dragon9",
+    name: "覇道の竜翼・フォルテ",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 6,
+    attack: 5,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "【疾走】<br>【威圧】" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/覇道の竜翼・フォルテ.png", // Placeholder image
+  },
+  {
+    id: "dragon10",
+    name: "灼熱のアナテマバーンドナイト",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 7,
+    attack: 7,
+    toughness: 7,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "自分の手札1枚を選ぶ。それを捨てる。相手の場のフォロワーすべてにXダメージ。Xは選んだカードのコストである<br>【威圧】" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '相手は『クレスト：灼熱のアナテマバーンドナイト』を持つ。<br><Card>自分のターン開始時、自分のリーダーに1ダメージ。<br>自分のリーダーが回復したとき、自分のターンごとに1回、自分のリーダーに1ダメージ。</Card>' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/灼熱のアナテマバーンドナイト.png", // Placeholder image
+  },
+  {
+    id: "dragon11",
+    name: "シャークソルジャー",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 8,
+    attack: 6,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "相手のリーダーに6ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/シャークソルジャー.png", // Placeholder image
+  },
+  {
+    id: "dragon12",
+    name: "龍人演義・ガリュウ",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 8,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "『覇道の金龍』1枚と『覇道の銀龍』1枚を自分の場に出す。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '自分の場の『覇道の金龍』すべては【疾走】を持つ。自分の場の『覇道の銀龍』すべては【バリア】を持つ。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/龍人演義・ガリュウ.png", // Placeholder image
+  },
+  {
+    id: "dragon13",
+    name: "ナイトフォールドラゴン",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 9,
+    attack: 9,
+    toughness: 9,
+    effects: [
+      { mode: "default", cost: 9, conditions: {}, effect: "相手の場のフォロワーすべては-0/-9する。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '自分のデッキから3枚を引く。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/ナイトフォールドラゴン.png", // Placeholder image
+  },
+  {
+    id: "dragon14",
+    name: "再臨のジェネシスドラゴン",
+    type: "follower",
+    leader: "dragon",
+    baseCost: 10,
+    attack: 9,
+    toughness: 10,
+    effects: [
+      { mode: "default", cost: 10, conditions: {}, effect: "【疾走】" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/dragon/再臨のジェネシスドラゴン.png", // Placeholder image
+  },
+  {
+    id: "nemesis1",
+    name: "愛執のドールユーザー",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "『操り人形』1枚を自分の手札に加える。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '『操り人形』1枚を自分の手札に加える。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/愛執のドールユーザー.png", // Placeholder image
+  },
+  {
+    id: "nemesis2",
+    name: "アンストッパブルガンナー",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "『フューチャーコア』1枚を自分の手札に加える。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに3ダメージ' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/アンストッパブルガンナー.png", // Placeholder image
+  },
+  {
+    id: "nemesis3",
+    name: "命の奔流",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それに3ダメージ。『パストコア』1枚を自分の手札に加える。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/命の奔流.png", // Placeholder image
+  },
+  {
+    id: "nemesis4",
+    name: "ドールズシアター",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "『操り人形』1枚を自分の手札に加える。<br><br>【カウントダウン_2】<br>自分のターン終了時、『操り人形』1枚を自分の手札に加える。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/ドールズシアター.png", // Placeholder image
+  },
+  {
+    id: "nemesis5",
+    name: "マリオネットランサー",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 2,
+    attack: 2,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "『改良型操り人形』1枚を自分の手札に加える。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/マリオネットランサー.png", // Placeholder image
+  },
+  {
+    id: "nemesis6",
+    name: "オートマタアサシン",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 3,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "『改良型操り人形』1枚を自分の手札に加える。<br>自分の人形フォロワーが場に出たとき、自分のターンごとに1回、それは【必殺】を持つ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/オートマタアサシン.png", // Placeholder image
+  },
+  {
+    id: "nemesis7",
+    name: "人形の身代わり",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "『改良型操り人形』2枚を自分の場に出す。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/人形の身代わり.png", // Placeholder image
+  },
+  {
+    id: "nemesis8",
+    name: "砲撃の猫獣人",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 3,
+    attack: 3,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "『フューチャーコア』1枚を自分の手札に加える。<br>【突進】" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/砲撃の猫獣人.png", // Placeholder image
+  },
+  {
+    id: "nemesis9",
+    name: "異次元からの銃撃",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 4,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それを破壊。<br>『フューチャーコア』1枚と『パストコア』1枚を自分の手札に加える。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/異次元からの銃撃.png", // Placeholder image
+  },
+  {
+    id: "nemesis10",
+    name: "ストラグルリーダー・ルキナ",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 4,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "『フューチャーコア』1枚と『パストコア』1枚を自分の手札に加える。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '『アタックアーティファクト』1枚を自分の場に出す。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/ストラグルリーダー・ルキナ.png", // Placeholder image
+  },
+  {
+    id: "nemesis11",
+    name: "遺産の砲撃",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 5,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "『フューチャーコア』1枚を自分の手札に加える。<br>自分が【融合】したとき、相手の場のフォロワーからランダム1枚に2ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/遺産の砲撃.png", // Placeholder image
+  },
+  {
+    id: "nemesis12",
+    name: "改境の再動",
+    type: "spell",
+    leader: "nemesis",
+    baseCost: 5,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "自分の手札のコスト5以下のアーティファクトフォロワー2枚を選ぶ。それのコピー1枚を自分の場に出す。それは「相手のターン終了時、これを破壊。」を持つ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/改境の再動.png", // Placeholder image
+  },
+  {
+    id: "nemesis13",
+    name: "改境の天宮・アルエット",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 5,
+    attack: 2,
+    toughness: 4,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "『フューチャーコア』1枚と『パストコア』1枚を自分の手札に加える。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '自分の手札のコスト5以下のアーティファクトフォロワー1枚を選ぶ。それのコピー1枚を自分の場に出す。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/改境の天宮・アルエット.png", // Placeholder image
+  },
+  {
+    id: "nemesis14",
+    name: "殺意の糸・ノア",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 6,
+    attack: 5,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "『操り人形』3枚を自分の手札に加える。自分の手札の人形フォロワーすべては+1/+0する。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/殺意の糸・ノア.png", // Placeholder image
+  },
+  {
+    id: "nemesis15",
+    name: "箱庭の断罪者・シルヴィア",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 6,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "【モード】1つを選んでその能力が働く。<br>（1）自分のデッキから2枚を引く。<br>（2）自分のリーダーを4回復。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それを破壊。' },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '相手の場のフォロワー2枚を選ぶ。それを破壊。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/箱庭の断罪者・シルヴィア.png", // Placeholder image
+  },
+  {
+    id: "nemesis16",
+    name: "ブーストエクステンド・ララミア",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 8,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "自分の手札のコスト5以下のアーティファクトフォロワー3枚を選ぶ。それのコピー1枚を自分の場に出す。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '自分の場のアーティファクトフォロワーすべては+1/+1する。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/ブーストエクステンド・ララミア.png", // Placeholder image
+  },
+  {
+    id: "nemesis17",
+    name: "プロシードハート・オーキス",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 8,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "『ロイド』1枚を自分の場に出す。<br>自分の人形フォロワーが場に出たとき、それは【疾走】と【必殺】を持つ。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '『改良型操り人形』2枚を自分の場に出す。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/プロシードハート・オーキス.png", // Placeholder image
+  },
+  {
+    id: "nemesis18",
+    name: "狂気の創造者・リーアム",
+    type: "follower",
+    leader: "nemesis",
+    baseCost: 10,
+    attack: 8,
+    toughness: 8,
+    effects: [
+      { mode: "default", cost: 10, conditions: {}, effect: "『改良型操り人形』3枚を自分の場に出す" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '自分の場の人形フォロワーすべては【守護】と「【ラストワード】相手のリーダーに2ダメージ。」を持つ。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nemesis/狂気の創造者・リーアム.png", // Placeholder image
   },
   {
     id: "orivie",
@@ -294,20 +910,20 @@ const LEADERS = [
 // ネメシスアーティファクトトークンのデータ定義
 const NEMESIS_ARTIFACT_TOKENS = [
   // Puppets
-  { id: "puppet", name: "操り人形", cost: 1, attack: 1, defense: 1, effect: "効果：なし", category: "puppet" },
-  { id: "enhanced_puppet", name: "強化型操り人形", cost: 1, attack: 2, defense: 2, effect: "効果：なし", category: "puppet" },
+  { id: "puppet", name: "操り人形", cost: 0, attack: 1, defense: 1, effect: "【突進】相手のターン終了時に破壊される", category: "puppet" },
+  { id: "enhanced_puppet", name: "改良型操り人形", cost: 1, attack: 3, defense: 3, effect: "【突進】相手のターン終了時に破壊される", category: "puppet" },
   // Cores
-  { id: "past_core", name: "パスト・コア", cost: 1, attack: 1, defense: 1, effect: "1コストのアーティファクトと合成した時にキャッスルアーティファクトに変身する", category: "core" },
-  { id: "future_core", name: "フューチャー・コア", cost: 1, attack: 1, defense: 1, effect: "1コストのアーティファクトと合成した時にアタックアーティファクトに変身する", category: "core" },
+  { id: "past_core", name: "パスト・コア", cost: 1, attack: null, defense: null, effect: "1コストのアーティファクトと合成した時にキャッスルアーティファクトに変身する", category: "core" },
+  { id: "future_core", name: "フューチャー・コア", cost: 1, attack: null, defense: null, effect: "1コストのアーティファクトと合成した時にアタックアーティファクトに変身する", category: "core" },
   // Intermediate Artifacts (formed from cores)
-  { id: "castle_artifact", name: "キャッスルアーティファクト", cost: 3, attack: null, defense: null, effect: "これに【融合】したカードのコストの合計によって変身する。", category: "intermediate_artifact" },
-  { id: "attack_artifact", name: "アタックアーティファクト", cost: 3, attack: null, defense: null, effect: "これに【融合】したカードのコストの合計によって変身する。", category: "intermediate_artifact" },
+  { id: "castle_artifact", name: "キャッスルアーティファクト", cost: 3, attack: 5, defense: 1, effect: "【融合】アーティファクトカード<br>これに【融合】したカードのコストの合計によって変身する。<br>1⇒『デストロイアーティファクトα』<br>2⇒『デストロイアーティファクトβ』<br>3以上⇒『デストロイアーティファクトγ』<br><br>【守護】", category: "intermediate_artifact" },
+  { id: "attack_artifact", name: "アタックアーティファクト", cost: 3, attack: 1, defense: 5, effect: "【融合】アーティファクトカード<br>これに【融合】したカードのコストの合計によって変身する。<br>1⇒『デストロイアーティファクトα』<br>2⇒『デストロイアーティファクトβ』<br>3以上⇒『デストロイアーティファクトγ』<br>【突進】", category: "intermediate_artifact" },
   // Destroy Artifacts
-  { id: "destroy_artifact_alpha", name: "デストロイアーティファクトα", cost: 5, attack: null, defense: null, effect: "『デストロイアーティファクトβ』や『デストロイアーティファクトγ』をそれぞれこれに【融合】したとき、『イクシードアーティファクトΩ』に変身する。", category: "destroy_artifact" },
-  { id: "destroy_artifact_beta", name: "デストロイアーティファクトβ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
-  { id: "destroy_artifact_gamma", name: "デストロイアーティファクトγ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
+  { id: "destroy_artifact_alpha", name: "デストロイアーティファクトα", cost: 5, attack: 3, defense: 5, effect: "【融合】『デストロイアーティファクトβ』や『デストロイアーティファクトγ』<br>これに【融合】したとき、これに【融合】した種類が2なら、これは『イクシードアーティファクトΩ』に変身する。<br>自分のターン終了時、自分のリーダーを3回復。<br>", category: "destroy_artifact" },
+  { id: "destroy_artifact_beta", name: "デストロイアーティファクトβ", cost: 5, attack: 4, defense: 4, effect: "自分のターン終了時、相手のリーダーに3ダメージ。", category: "destroy_artifact" },
+  { id: "destroy_artifact_gamma", name: "デストロイアーティファクトγ", cost: 5, attack: 5, defense: 3, effect: "自分のターン終了時、相手の場のフォロワーすべてに3ダメージ。", category: "destroy_artifact" },
   // Final Artifact
-  { id: "exceed_artifact_omega", cost: 10, name: "イクシードアーティファクトΩ", attack: null, defense: null, effect: "効果：なし", category: "final_artifact" },
+  { id: "exceed_artifact_omega", cost: 10, name: "イクシードアーティファクトΩ", attack: 10, defense: 10, effect: "【ファンファーレ】相手の場のフォロワーすべてに5ダメージ。自分のリーダーを5回復。<br>【疾走】<br>【守護】<br>【オーラ】", category: "final_artifact" },
 ];
 
 
@@ -517,30 +1133,11 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         {/* カード画像と使用ボタン */}
-        <Stack gap="xs" align={"stretch"}>
-          <Button
-            size={"compact-xs"}
-            variant="filled"
-            color="blue"
-            onClick={() => actionableEffect && onUseCard(card, actionableEffect)}
-            disabled={isDisabled}
-            styles={{
-              root: {
-                "&[data-disabled]": {
-                  backgroundColor: "var(--mantine-color-dark-9) !important",
-                  color: "var(--mantine-color-dark-5) !important",
-                  cursor: "not-allowed",
-                },
-              },
-            }}
-          >
-            使用
-          </Button>
           <HoverCard
             width={400}
             shadow="md"
-            openDelay={200}
-            closeDelay={400}
+            openDelay={50}
+            closeDelay={300}
             position="bottom"
             offset={10}
             withArrow
@@ -554,26 +1151,44 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
             }}
           >
             <HoverCard.Target>
-              <div style={{position:"relative"}}>
-              <Image
-                src={card.imageUrl}
-                alt={card.name}
-                width={150}
-                height={225}
-                radius="md"
-                style={{ cursor: 'pointer', border: '2px solid var(--mantine-color-blue-6)' }}
-                onClick={() => setShowDetailsModal(true)} // 画像クリックでモーダルを開く
-                fallbackSrc="https://placehold.co/100x150/FF0000/FFFFFF?text=No+Image" // Fallback image
-              />
-              {postitEffects}
-            </div>
+              <Stack gap="xs" align={"stretch"}>
+                <Button
+                  size={"compact-xs"}
+                  variant="filled"
+                  color="blue"
+                  onClick={() => actionableEffect && onUseCard(card, actionableEffect)}
+                  disabled={isDisabled}
+                  styles={{
+                    root: {
+                      "&[data-disabled]": {
+                        backgroundColor: "var(--mantine-color-dark-9) !important",
+                        color: "var(--mantine-color-dark-5) !important",
+                        cursor: "not-allowed",
+                      },
+                    },
+                  }}
+                >
+                  使用
+                </Button>
+                    <div style={{position:"relative"}}>
+                    <Image
+                      src={card.imageUrl}
+                      alt={card.name}
+                      width={150}
+                      height={225}
+                      radius="md"
+                      style={{ cursor: 'pointer', border: '2px solid var(--mantine-color-blue-6)' }}
+                      onClick={() => setShowDetailsModal(true)} // 画像クリックでモーダルを開く
+                      fallbackSrc="https://placehold.co/100x150/FF0000/FFFFFF?text=No+Image" // Fallback image
+                    />
+                    {postitEffects}
+                  </div>
+              </Stack>
             </HoverCard.Target>
             <HoverCard.Dropdown>
               {hoverCardContent}
             </HoverCard.Dropdown>
           </HoverCard>
-        </Stack>
-
         {/* カード情報（名称、タイプ、コスト、攻撃力/体力）
         <Stack gap="xs" style={{ flexGrow: 1 }}>
           <Text fw="bold" c="blue.2" size="lg">
@@ -639,8 +1254,8 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
               <Image
                 src={card.imageUrl}
                 alt={card.name}
-                width={100}
-                height={150}
+                width={240}
+                height={360}
                 radius="md"
                 style={{ cursor: 'pointer', border: '2px solid var(--mantine-color-blue-6)' }}
                 onClick={() => setShowDetailsModal(true)} // 画像クリックでモーダルを開く
@@ -650,7 +1265,7 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
             <Grid.Col span={"auto"}>
               <Stack gap="xs">
                 {card.effects.map((eff: any, i: number) => (
-                  <Group key={`modal-effect-${i}`} mt="xs" wrap="nowrap" align="flex-start">
+                  <Group key={`modal-effect-${i}`} mt="xs" wrap="nowrap" align="center">
                     {eff.mode.endsWith('_modifier') ? (
                         EFFECT_MODES[eff.mode.replace('_modifier', '') as keyof typeof EFFECT_MODES]
                     ) : (
@@ -1268,7 +1883,7 @@ export default function Home() {
       }
     } else if (targetArtifactId === "destroy_artifact_alpha") {
         const intermediateArtifacts = ["castle_artifact", "attack_artifact"];
-        const oneCostArtifacts = ["puppet", "enhanced_puppet", "past_core", "future_core"];
+        const oneCostArtifacts = ["past_core", "future_core"];
 
         const selectedIntermediateId = Object.keys(materialsToConsume).find(id => intermediateArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
         const selectedOneCostId = Object.keys(materialsToConsume).find(id => oneCostArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
@@ -1279,7 +1894,7 @@ export default function Home() {
         } else { canSynthesize = false; setSynthesisError("デストロイアーティファクトαの合成条件を満たしていません。"); }
     } else if (targetArtifactId === "destroy_artifact_beta") {
         const intermediateArtifacts = ["castle_artifact", "attack_artifact"];
-        const oneCostArtifacts = ["puppet", "enhanced_puppet", "past_core", "future_core"];
+        const oneCostArtifacts = ["past_core", "future_core"];
 
         const selectedIntermediateId = Object.keys(materialsToConsume).find(id => intermediateArtifacts.includes(id) && (materialsToConsume[id] || 0) === 1);
         // Count 1-cost materials, allowing for duplicates if multiple copies of the same token are used
@@ -1458,7 +2073,7 @@ export default function Home() {
 
   // Generate combinations for Destroy Beta
   const generateDestroyBetaCombinations = useCallback(() => {
-    const oneCostTokens = availableMaterials.filter(t => ["puppet", "enhanced_puppet", "past_core", "future_core"].includes(t.id));
+    const oneCostTokens = availableMaterials.filter(t => ["past_core", "future_core"].includes(t.id));
     const combinations: Array<{ id: string; materials: string[]; name: string }> = []; // Explicitly type combinations array
 
     // Flatten the available 1-cost tokens into an array of individual tokens
@@ -1511,8 +2126,9 @@ export default function Home() {
         <Card
           shadow="xl"
           withBorder
+          h={"90vh"}
           style={{
-            minWidth: 350,
+            minWidth: 380,
             backgroundColor: "var(--mantine-color-dark-8)",
             borderColor: "var(--mantine-color-blue-9)",
           }}
@@ -1629,23 +2245,6 @@ export default function Home() {
               {leader === "dragon" && (
                 <>
                   <Button
-                    onClick={handlePpMaxIncrease}
-                    size="xs"
-                    variant="light"
-                    color="blue"
-                    styles={{
-                      root: {
-                        "&[data-disabled]": {
-                          backgroundColor: "var(--mantine-color-dark-9) !important",
-                          color: "var(--mantine-color-dark-5) !important",
-                          cursor: "not-allowed",
-                        },
-                      },
-                    }}
-                  >
-                    PP上限 +1
-                  </Button>
-                  <Button
                     onClick={handlePpMaxDecrease}
                     color="red"
                     size="xs"
@@ -1662,6 +2261,23 @@ export default function Home() {
                   >
                     PP上限 -1
                   </Button>
+                  <Button
+                    onClick={handlePpMaxIncrease}
+                    size="xs"
+                    variant="light"
+                    color="blue"
+                    styles={{
+                      root: {
+                        "&[data-disabled]": {
+                          backgroundColor: "var(--mantine-color-dark-9) !important",
+                          color: "var(--mantine-color-dark-5) !important",
+                          cursor: "not-allowed",
+                        },
+                      },
+                    }}
+                  >
+                    PP上限 +1
+                  </Button>
                 </>
               )}
 
@@ -1673,7 +2289,7 @@ export default function Home() {
                   onChange={(e) => {
                     const checked = e.currentTarget.checked
                     setTurnPpBonus(checked ? 1 : 0)
-                    setPpCurrent((prev) => Math.min(prev + (checked ? 1 : -1), ppMax))
+                    setPpCurrent((prev) => Math.min(prev + (checked ? 1 : -1), ppMax+1))
                     setExtraPPUsedThisTurn(!checked);
                   }}
                 />
@@ -1745,13 +2361,14 @@ export default function Home() {
         <Card
           shadow="xl"
           withBorder
+          h={"90vh"}
           style={{
             flex: 1,
             backgroundColor: "var(--mantine-color-dark-8)",
             borderColor: "var(--mantine-color-blue-9)",
           }}
         >
-          <Tabs defaultValue="removal" color="blue">
+          <Tabs defaultValue="removal" color="blue" style={{ flexShrink: 0 }}>
             <Tabs.List style={{ color: "white" }}>
               <Tabs.Tab
                 value="removal"
@@ -1771,6 +2388,7 @@ export default function Home() {
               >
                 トークン管理
               </Tabs.Tab>
+              {/** 
               <Tabs.Tab
                 value="strong_moves"
                 leftSection={<IconBrain size={16} />}
@@ -1789,14 +2407,15 @@ export default function Home() {
               >
                 履歴
               </Tabs.Tab>
+              */}
             </Tabs.List>
-
-            <Tabs.Panel value="removal" pt="md">
+            <Box style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <Tabs.Panel value="removal" pt="md" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <ScrollArea style={{ flex: 1, minHeight: 0 }}>
               <Stack gap="md">
                 <Title order={3} c="blue.3">
                   使用可能な除去カード
                 </Title>
-                <ScrollArea h={500}>
                   <Group gap="sm">
                     {filteredCards.length > 0 ? (
                       filteredCards.map((card) => (
@@ -1813,11 +2432,12 @@ export default function Home() {
                       <Text c="blue.4">現在使用可能な除去カードはありません。</Text>
                     )}
                   </Group>
-                </ScrollArea>
               </Stack>
+              </ScrollArea>
             </Tabs.Panel>
 
-            <Tabs.Panel value="tokens" pt="md">
+            <Tabs.Panel value="tokens" pt="md" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <ScrollArea style={{ flex: 1, minHeight: 0 }}>
               <Stack gap="md">
                 <Title order={3} c="blue.3">
                   トークン・特殊効果メモ
@@ -2117,6 +2737,7 @@ export default function Home() {
                   }}
                 />
               </Stack>
+              </ScrollArea>
             </Tabs.Panel>
 
             <Tabs.Panel value="strong_moves" pt="md">
@@ -2166,7 +2787,7 @@ export default function Home() {
                   </Stack>
                 </ScrollArea>
               </Stack>
-            </Tabs.Panel>
+            </Tabs.Panel></Box>
           </Tabs>
         </Card>
       </Group>
