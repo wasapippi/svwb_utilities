@@ -20,23 +20,29 @@ import {
   Collapse,
   Modal,
   Checkbox,
+  NumberInput,
+  HoverCard, // HoverCardをインポート
+  Image,
+  Container,
 } from "@mantine/core"
 import { IconCircleFilled, IconCircle, IconSword, IconShield, IconBrain, IconHistory, IconChevronDown, IconChevronUp, IconUsers, IconRefresh, IconPlus, IconMinus, IconBoxMultiple } from "@tabler/icons-react"
 
 // --- Constants & Data Definitions ---
-
+90
 const CARD_TYPES = {
-  follower: <Badge miw={80} color="blue" variant="light">フォロワー</Badge>,
-  spell: <Badge miw={80} color="blue" variant="light">スペル</Badge>,
+  // miwを調整し、フォロワーとスペルのバッジの幅を揃え、サイズを大きくしました
+  follower: <Badge miw={100} size="lg" color="blue" variant="light" c="white">フォロワー</Badge>,
+  spell: <Badge miw={100} size="lg" color="blue" variant="light" c="white">スペル</Badge>,
 }
 
 const EFFECT_MODES = {
-  default: <Text miw={80}></Text>,
-  enhance: <Badge miw={80} color="orange" variant="light">エンハンス</Badge>,
-  evolve: <Badge miw={80} color="yellow" variant="light">進化</Badge>,
-  super_evolve: <Badge miw={80} color="violet" variant="light">超進化</Badge>,
+  default: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}}  miw={90} color="gray" variant="filled">基本効果</Badge>,
+  enhance: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}}  miw={90} color="orange" variant="filled">エンハンス</Badge>,
+  evolve: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}} miw={90} color="yellow" variant="filled">進化</Badge>,
+  super_evolve: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}} miw={90} color="violet" variant="filled">超進化</Badge>,
+  necromancy: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}} miw={90} color="grape" variant="filled">ネクロマンス</Badge>, // Added necromancy
+  awakening: <Badge styles={{label: {textShadow: `-1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black`,},}} style={{border:"2px solid white"}} miw={90} color="red" variant="filled">覚醒</Badge>, // Added awakening
 }
-
 const THREAT_COLORS = {
   critical: "red",
   high: "orange",
@@ -53,23 +59,185 @@ const THREAT_LABELS = {
 
 const REMOVAL_CARDS = [
   {
-    id: "angelic_smite",
-    name: "天罰の神撃",
+    id: "royal1",
+    name: "勇猛のルミナスランサー",
+    type: "follower",
+    leader: "royal",
+    baseCost: 2,
+    attack: 1,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "ナイト1枚を自分の場に出す。<br> 自分の兵士・フォロワーが場に出たとき、それは【突進】を持つ" },
+    ],
+    imageUrl: "/img/1/royal/勇猛のルミナスランサー.png", // Placeholder image
+  },{
+    id: "royal2",
+    name: "異端の侍",
+    type: "follower",
+    leader: "royal",
+    baseCost: 2,
+    attack: 2,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "超進化可能ターンなら、これは【必殺】を持つ<br>【突進】" },
+    ],
+    imageUrl: "/img/1/royal/異端の侍.png", // Placeholder image
+  },{
+    id: "royal3",
+    name: "刹那のクイックブレイダー",
+    type: "follower",
+    leader: "royal",
+    baseCost: 1,
+    attack: 1,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: {}, effect: "【疾走】" },
+    ],
+    imageUrl: "/img/1/royal/刹那のクイックブレイダー.png", // Placeholder image
+  },{
+    id: "royal4",
+    name: "ミリタリードッグ",
+    type: "follower",
+    leader: "royal",
+    baseCost: 3,
+    attack: 4,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "突進" },
+      { mode: "enhance", cost: 6, conditions: {}, effect: "【6コスト】ミリタリードッグ2枚を自分の場に出す" },
+    ],
+    imageUrl: "/img/1/royal/ミリタリードッグ.png", // Placeholder image
+  },{
+    id: "royal5",
+    name: "サイレントスナイパー・ワルツ",
+    type: "follower",
+    leader: "royal",
+    baseCost: 3,
+    attack: 2,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それに5ダメージ" },
+      { mode: "enhance", cost: 6, conditions: {}, effect: "【6コスト】これは+2/+2して【潜伏】を持つ" },
+    ],
+    imageUrl: "/img/1/royal/サイレントスナイパー・ワルツ.png", // Placeholder image
+  },{
+    id: "royal6",
+    name: "レヴィオンの迅雷・アルベール",
+    type: "follower",
+    leader: "royal",
+    baseCost: 5,
+    attack: 3,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "【疾走】" },
+      { mode: "enhance", cost: 9, conditions: {}, effect: "【9コスト】相手の場のフォロワーすべてに3ダメージ。これは「1ターンに2回攻撃できる。」をもつ" },
+    ],
+    imageUrl: "/img/1/royal/レヴィオンの迅雷・アルベール.png", // Placeholder image
+  },{
+    id: "royal7",
+    name: "レヴィオンアックス・ジェノ",
+    type: "follower",
+    leader: "royal",
+    baseCost: 7,
+    attack: 7,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "【突進】<br>1ターンに2回攻撃できる。<br>【攻撃時】これは【バリア】を持つ。ナイト1枚を自分の場に出す" },
+    ],
+    imageUrl: "/img/1/royal/レヴィオンアックス・ジェノ.png", // Placeholder image
+  },{
+    id: "royal8",
+    name: "テンタクルバイト",
+    type: "spell",
+    leader: "royal",
+    baseCost: 7,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "相手の場のフォロワー1枚か相手のリーダーを選ぶ。それに5ダメージ。自分のリーダーを5回復" },
+    ],
+    imageUrl: "/img/1/royal/テンタクルバイト.png", // Placeholder image
+  },{
+    id: "royal9",
+    name: "ケンタウロスの騎士",
+    type: "follower",
+    leader: "royal",
+    baseCost: 8,
+    attack: 7,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "【疾走】" },
+    ],
+    imageUrl: "/img/1/royal/ケンタウロスの騎士.png", // Placeholder image
+  },{
+    id: "royal10",
+    name: "煌刃の勇者・アマリア",
+    type: "follower",
+    leader: "royal",
+    baseCost: 8,
+    attack: 6,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "スティールナイト(2/2)4枚を自分の場に出す。<br>自分の他のフォロワーが場に出たとき、それは+1/+0して【突進】と【守護】を持つ。" },
+    ],
+    imageUrl: "/img/1/royal/煌刃の勇者・アマリア.png", // Placeholder image
+  },{
+    id: "royal11",
+    name: "剣士の斬撃",
+    type: "spell",
+    leader: "royal",
+    baseCost: 4,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それを破壊。『スティールナイト』1枚を自分の場に出す。s" },
+    ],
+    imageUrl: "/img/1/royal/剣士の斬撃.png", // Placeholder image
+  },
+
+  
+  {
+    id: "neutral1",
+    name: "楽朗の天宮・フィルドア",
+    type: "follower",
+    leader: "neutral",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それを破壊' },
+    ],
+    imageUrl: "/img/1/neutral/楽朗の天宮・フィルドア.png", // Placeholder image
+  },{
+    id: "neutral2",
+    name: "迸る巧妙・アポロン",
+    type: "follower",
+    leader: "neutral",
+    baseCost: 3,
+    attack: 1,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "敵全体に1ダメージ" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: "敵全体に1ダメージ" },
+    ],
+    imageUrl: "/img/1/neutral/迸る巧妙・アポロン.png", // Placeholder image
+  },{
+    id: "neutral3",
+    name: "神の雷霆",
     type: "spell",
     leader: "neutral",
-    baseCost: 5,
-    effects: [{ mode: "default", cost: 5, conditions: {}, effect: "フォロワー1体に5ダメージ" }],
-  },
-  {
-    id: "enhance_bolt",
-    name: "エンハンス・ボルト",
-    type: "spell",
-    leader: "witch",
-    baseCost: 3,
+    baseCost: 4,
+    effects: [{ mode: "default", cost: 5, conditions: {}, effect: "相手の場の攻撃力最大のフォロワーからランダムに1枚を破壊。相手の場のフォロワーすべてに1ダメージ" }],
+    imageUrl: "/img/1/neutral/神の雷霆.png", // Placeholder image
+  },{
+    id: "neutral5",
+    name: "勇壮の堕天使・オリヴィエ",
+    type: "follower",
+    leader: "neutral",
+    baseCost: 7,
+    attack: 4,
+    toughness: 4,
     effects: [
-      { mode: "default", cost: 3, conditions: {}, effect: "敵1体に3ダメージ" },
-      { mode: "enhance", cost: 6, conditions: {}, effect: "敵全体に3ダメージ（エンハンス）" },
+      { mode: "default", cost: 7, conditions: {}, effect: "自分のデッキから2枚引く。自分のリーダーを2回復。自分のPPを2回復" },
+      { mode: 'super_evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: "自分の場の他の進化前野フォロワーを1枚選ぶ。それは超進化する" },
     ],
+    imageUrl: "/img/1/neutral/勇壮の堕天使・オリヴィエ.png", // Placeholder image
   },
   {
     id: "orivie",
@@ -77,35 +245,23 @@ const REMOVAL_CARDS = [
     type: "follower",
     leader: "witch",
     baseCost: 3,
+    attack: 2,
+    toughness: 3,
     effects: [
       { mode: "default", cost: 3, conditions: {}, effect: "敵1体に3ダメージ" },
       { mode: "enhance", cost: 6, conditions: {}, effect: "敵全体に3ダメージ（エンハンス）" },
       { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '進化時：他フォロワー進化' },
       { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '超進化時：他フォロワー超進化' }
     ],
-  },
-  {
-    id: "dragon_breath",
-    name: "ドラゴンブレス",
-    type: "spell",
-    leader: "dragon",
-    baseCost: 4,
-    effects: [{ mode: "default", cost: 4, conditions: {}, effect: "敵フォロワー1体を破壊" }],
-  },
-  {
-    id: "holy_light",
-    name: "聖なる光",
-    type: "spell",
-    leader: "bishop",
-    baseCost: 2,
-    effects: [{ mode: "default", cost: 2, conditions: {}, effect: "敵フォロワー1体に2ダメージ" }],
-  },
+    imageUrl: "https://placehold.co/100x150/000000/FFFFFF?text=オリヴィエ", // Placeholder image
+  }
 ]
 
 const STRONG_MOVES = {
   dragon: [
     { turn: 4, move: "ドラゴンナイト召喚 + PP加速", threat: "high" },
     { turn: 6, move: "大型フォロワー展開", threat: "critical" },
+    { turn: 7, move: "覚醒能力発動 + 全体除去", threat: "critical" }, // Added awakening move
     { turn: 8, move: "バハムート級の切り札", threat: "critical" },
   ],
   witch: [
@@ -118,6 +274,11 @@ const STRONG_MOVES = {
     { turn: 6, move: "テミスの審判", threat: "high" },
     { turn: 8, move: "セラフ召喚", threat: "critical" },
   ],
+  nightmare: [
+    { turn: 3, move: "スケルトン召喚 + 墓地肥やし", threat: "medium" },
+    { turn: 5, move: "ファントムハウル + 墓地消費", threat: "high" },
+    { turn: 7, move: "モルディカイ降臨", threat: "critical" },
+  ],
 }
 
 const LEADERS = [
@@ -125,7 +286,7 @@ const LEADERS = [
   { value: "royal", label: "ロイヤル" },
   { value: "witch", label: "ウィッチ" },
   { value: "dragon", label: "ドラゴン" },
-  { value: "nightmare", label: "ネクロマンサー" },
+  { value: "nightmare", label: "ナイトメア" },
   { value: "bishop", label: "ビショップ" },
   { value: "nemesis", label: "ネメシス" },
 ];
@@ -146,7 +307,7 @@ const NEMESIS_ARTIFACT_TOKENS = [
   { id: "destroy_artifact_beta", name: "デストロイアーティファクトβ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
   { id: "destroy_artifact_gamma", name: "デストロイアーティファクトγ", cost: 5, attack: null, defense: null, effect: "効果：なし", category: "destroy_artifact" },
   // Final Artifact
-  { id: "exceed_artifact_omega", name: "イクシードアーティファクトΩ", cost: 10, attack: null, defense: null, effect: "効果：なし", category: "final_artifact" },
+  { id: "exceed_artifact_omega", cost: 10, name: "イクシードアーティファクトΩ", attack: null, defense: null, effect: "効果：なし", category: "final_artifact" },
 ];
 
 
@@ -154,77 +315,75 @@ const NEMESIS_ARTIFACT_TOKENS = [
 
 /**
  * Determines if a card effect is active based on current game context.
+ * This function now differentiates between playable effects and modifier effects.
  * @param {object} effect - The effect object with conditions and mode.
- * @param {object} ctx - The game context (turn, pp, ep, sep, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
+ * @param {object} ctx - The game context (turn, pp, ppMax, ep, sep, graveyardCount, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
  * @returns {boolean} - True if the effect is active, false otherwise.
  */
 function isEffectActive(effect: any, ctx: any): boolean {
-  const c = effect.conditions || {}
-  if (c.minTurn !== undefined && ctx.turn < c.minTurn) return false
-  if (c.minPP !== undefined && ctx.pp < c.minPP) return false
+  const c = effect.conditions || {};
+
+  // Special handling for modifier effects: they don't have a direct PP cost for activation
+  if (effect.mode === 'necromancy_modifier') {
+    return c.necromancyCost !== undefined && ctx.graveyardCount >= c.necromancyCost;
+  }
+  if (effect.mode === 'awakening_modifier') {
+    // Awakening condition: ppMax >= 7
+    return ctx.ppMax !== undefined && ctx.ppMax >= 7;
+  }
+
+  // For playable effects (default, enhance, evolve, super_evolve)
+  if (c.minTurn !== undefined && ctx.turn < c.minTurn) return false;
+  if (c.minPP !== undefined && ctx.pp < c.minPP) return false;
 
   // If EP or SEP is required and already used this turn, effect is not active.
   if ((c.evolveTokenMin !== undefined || c.superEvolveTokenMin !== undefined) && ctx.evolveUsedThisTurn) {
     return false;
   }
-  if (c.evolveTokenMin !== undefined && ctx.ep < c.evolveTokenMin) return false
-  if (c.superEvolveTokenMin !== undefined && ctx.sep < c.superEvolveTokenMin) return false
+  if (c.evolveTokenMin !== undefined && ctx.ep < c.evolveTokenMin) return false;
+  if (c.superEvolveTokenMin !== undefined && ctx.sep < c.superEvolveTokenMin) return false;
 
   // Add checks for turn-based EP/SEP usability
   if (effect.mode === 'evolve' && !ctx.isEpUsable) return false;
   if (effect.mode === 'super_evolve' && !ctx.isSepUsable) return false;
 
-  // Special handling for default mode: if an enhance effect is available and affordable, default is skipped.
-  if (effect.mode === "default" && ctx.cardEffects) {
-    const hasAffordableEnhance = ctx.cardEffects.some((e: any) => e.mode === "enhance" && e.cost <= ctx.pp)
-    if (hasAffordableEnhance) return false
-  }
+  // IMPORTANT: Removed the logic that skips default if enhance is available.
+  // isEffectActive should only check if *this specific effect* is active.
+  // The prioritization logic belongs in getActionableEffect.
 
-  return effect.cost <= ctx.pp // Effect is active if its cost is affordable
+  return effect.cost <= ctx.pp; // Playable effect is active if its cost is affordable
 }
 
 /**
  * Determines the most relevant actionable effect for a card based on current game context.
  * This is used to decide which effect the "使用" button should trigger.
+ * It returns the primary playable effect, without combining modifier text here.
  * @param {object} card - The card object.
- * @param {object} ctx - The game context (turn, pp, ep, sep, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
+ * @param {object} ctx - The game context (turn, pp, ppMax, ep, sep, graveyardCount, cardEffects, evolveUsedThisTurn, isEpUsable, isSepUsable).
  * @returns {object | null} - The most relevant actionable effect, or null if none.
  */
 function getActionableEffect(card: any, ctx: any): any | null {
-  const activeEffects = card.effects.filter((eff: any) => isEffectActive(eff, {
-    turn: ctx.turn,
-    pp: ctx.pp,
-    ep: ctx.ep,
-    sep: ctx.sep,
-    cardEffects: card.effects,
-    evolveUsedThisTurn: ctx.evolveUsedThisTurn,
-    isEpUsable: ctx.isEpUsable, // Pass to isEffectActive
-    isSepUsable: ctx.isSepUsable, // Pass to isEffectActive
-  }));
-
-  // Prioritization for what the button triggers:
-  // 1. Affordable Enhance (if exists)
-  // 2. Affordable Default (if exists)
-  // 3. Affordable Evolve/Super-evolve (if EP/SEP conditions met and not used this turn)
-  // This order ensures PP-consuming play effects are prioritized over evolution.
-  const enhanceAction = activeEffects.find((e: any) => e.mode === 'enhance' && e.cost <= ctx.pp);
-  if (enhanceAction) return enhanceAction;
-
-  const defaultAction = activeEffects.find((e: any) => e.mode === 'default' && e.cost <= ctx.pp);
-  if (defaultAction) return defaultAction;
-
-  // If no PP-consuming play effects are affordable, consider evolve/super_evolve if conditions are met
-  const evolveAction = activeEffects.find((e: any) => e.mode === 'evolve');
-  if (evolveAction && ctx.isEpUsable && ctx.ep >= (evolveAction.conditions?.evolveTokenMin || 1) && !ctx.evolveUsedThisTurn) {
-      return evolveAction;
+  // Prioritize enhance effect first if it's active and affordable
+  const enhanceEffect = card.effects.find((eff: any) => eff.mode === 'enhance');
+  if (enhanceEffect && isEffectActive(enhanceEffect, {
+      turn: ctx.turn, pp: ctx.pp, ppMax: ctx.ppMax, ep: ctx.ep, sep: ctx.sep, graveyardCount: ctx.graveyardCount,
+      cardEffects: card.effects, evolveUsedThisTurn: ctx.evolveUsedThisTurn,
+      isEpUsable: ctx.isEpUsable, isSepUsable: ctx.isSepUsable,
+  })) {
+    return enhanceEffect;
   }
 
-  const superEvolveAction = activeEffects.find((e: any) => e.mode === 'super_evolve');
-  if (superEvolveAction && ctx.isSepUsable && ctx.sep >= (superEvolveAction.conditions?.superEvolveTokenMin || 1) && !ctx.evolveUsedThisTurn) {
-      return superEvolveAction;
+  // If no active enhance, check for active default effect
+  const defaultEffect = card.effects.find((eff: any) => eff.mode === 'default');
+  if (defaultEffect && isEffectActive(defaultEffect, {
+      turn: ctx.turn, pp: ctx.pp, ppMax: ctx.ppMax, ep: ctx.ep, sep: ctx.sep, graveyardCount: ctx.graveyardCount,
+      cardEffects: card.effects, evolveUsedThisTurn: ctx.evolveUsedThisTurn,
+      isEpUsable: ctx.isEpUsable, isSepUsable: ctx.isSepUsable,
+  })) {
+    return defaultEffect;
   }
 
-  return null; // If no active and actionable effect is found
+  return null; // Card is not playable via its base or enhance cost
 }
 
 
@@ -304,22 +463,63 @@ function DotSelector({ value, max, onChange, label, disabled = false, knownCount
  * @param {object} props.actionableEffect - The effect that the '使用' button will trigger, or null.
  */
 function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect }: any) {
-  const [showAllEffects, setShowAllEffects] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false); // 全能力表示用モーダルの状態
 
   // The button is always enabled if actionableEffect is passed to this component
   // because the filtering in Home component ensures only actionable cards are displayed.
   const isDisabled = !actionableEffect;
 
+  // HoverCardに表示する効果テキストを生成
+  const hoverCardContent = useMemo(() => {
+    if (!actionableEffect) {
+      return <Text size="sm" c="white">現在使用可能な効果はありません。</Text>;
+    }
+    // HoverCardには、現在アクティブな効果すべてをバッジとテキストで表示
+    const activeEffects = card.availableEffects
+      .filter((eff: any) => eff.effect) // 効果テキストが存在するもののみ
+      .map((eff: any, i: number) => (
+        <Group key={i} wrap="nowrap" align={"center"} gap="xs">
+          {eff.mode.endsWith('_modifier') ? (
+              EFFECT_MODES[eff.mode.replace('_modifier', '') as keyof typeof EFFECT_MODES]
+          ) : (
+              EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]
+          )}
+          <Text size="sm" c="white" dangerouslySetInnerHTML={{ __html: eff.effect.replace(/\n/g, '<br/>') }} />
+        </Group>
+      ));
+    return activeEffects.length > 0 ? <Stack gap={4}>{activeEffects}</Stack> : <Text size="sm" c="white">効果なし</Text>;
+  }, [actionableEffect, card.availableEffects]);
+
+  const postitEffects = useMemo(() => {
+    if (!actionableEffect) {
+      return <></>
+    }
+    // HoverCardには、現在アクティブな効果すべてをバッジとテキストで表示
+    const activeEffects = card.availableEffects
+      .filter((eff: any) => eff.mode != "default") // 効果テキストが存在するもののみ
+      .map((eff: any, i: number) => (
+        <>
+          {eff.mode.endsWith('_modifier') ? (
+              EFFECT_MODES[eff.mode.replace('_modifier', '') as keyof typeof EFFECT_MODES]
+          ) : (
+              EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]
+          )}
+        </>
+      ));
+    return activeEffects.length > 0 ? <Stack gap="xs" style={{position:"absolute", top:50, right:-8}}>{activeEffects}</Stack> : <></>;
+  }, [actionableEffect, card.availableEffects]);
+
+
   return (
     <Card
       shadow="sm"
-      withBorder
       style={{ backgroundColor: "var(--mantine-color-dark-7)" }}
     >
-      <Group mt="xs" justify="space-between" wrap="nowrap">
-        <Group>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        {/* カード画像と使用ボタン */}
+        <Stack gap="xs" align={"stretch"}>
           <Button
-            size="sm"
+            size={"compact-xs"}
             variant="filled"
             color="blue"
             onClick={() => actionableEffect && onUseCard(card, actionableEffect)}
@@ -336,47 +536,134 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
           >
             使用
           </Button>
-          {CARD_TYPES[card.type]}
-          <Badge color="blue" variant="light">
-            {card.displayCost}コスト {/* Use the new displayCost */}
-          </Badge>
-          <Text fw="bold" c="blue.2">
+          <HoverCard
+            width={400}
+            shadow="md"
+            openDelay={200}
+            closeDelay={400}
+            position="bottom"
+            offset={10}
+            withArrow
+            styles={{
+              dropdown: {
+                backgroundColor: "var(--mantine-color-dark-5)",
+                borderColor: "var(--mantine-color-blue-7)",
+                borderWidth: 1,
+                borderStyle: 'solid',
+              }
+            }}
+          >
+            <HoverCard.Target>
+              <div style={{position:"relative"}}>
+              <Image
+                src={card.imageUrl}
+                alt={card.name}
+                width={150}
+                height={225}
+                radius="md"
+                style={{ cursor: 'pointer', border: '2px solid var(--mantine-color-blue-6)' }}
+                onClick={() => setShowDetailsModal(true)} // 画像クリックでモーダルを開く
+                fallbackSrc="https://placehold.co/100x150/FF0000/FFFFFF?text=No+Image" // Fallback image
+              />
+              {postitEffects}
+            </div>
+            </HoverCard.Target>
+            <HoverCard.Dropdown>
+              {hoverCardContent}
+            </HoverCard.Dropdown>
+          </HoverCard>
+        </Stack>
+
+        {/* カード情報（名称、タイプ、コスト、攻撃力/体力）
+        <Stack gap="xs" style={{ flexGrow: 1 }}>
+          <Text fw="bold" c="blue.2" size="lg">
             {card.name}
           </Text>
-        </Group>
-        <ActionIcon
-          variant="light"
-          onClick={() => setShowAllEffects((o) => !o)}
-          color="blue"
-          size="md"
-        >
-          {showAllEffects ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
-        </ActionIcon>
+          <Group gap="xs">
+            {CARD_TYPES[card.type]}
+            <Badge color="blue" variant="light" c="white" size="lg">
+              {card.displayCost}コスト
+            </Badge>
+            {card.type === "follower" && card.attack !== undefined && card.toughness !== undefined && (
+              <Badge color="gray" variant="light" c="white" size="lg">
+                {card.attack}/{card.toughness}
+              </Badge>
+            )}
+          </Group>
+        </Stack> */}
       </Group>
 
-      {/* Display only truly active effects based on card.availableEffects */}
-      {card.availableEffects.map((eff: any, i: number) => (
-        <Group key={`active-${i}`} mt="xs">
-          {EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]}
-          <Text size="sm" c="blue.4">
-            ・{eff.effect}
-          </Text>
-        </Group>
-      ))}
-
-      <Collapse in={showAllEffects}>
-        <Stack gap="xs" mt="md" style={{ borderTop: '1px solid var(--mantine-color-dark-5)', paddingTop: '10px' }}>
-          <Text size="sm" fw="bold" c="blue.3">全効果:</Text>
-          {card.effects.map((eff: any, i: number) => (
-            <Group key={`all-${i}`} mt="xs">
-              {EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]}
-              <Text size="sm" c="blue.4">
-                ・{eff.effect}
-              </Text>
-            </Group>
-          ))}
-        </Stack>
-      </Collapse>
+      {/* 全能力表示用モーダル */}
+      <Modal
+        opened={showDetailsModal}
+        size={"xl"}
+        onClose={() => setShowDetailsModal(false)}
+        title={
+          <Group justify={"space-between"}>
+            <Title order={3} c="blue.3">{card.name} - 全能力</Title>
+            <Button
+              size={"compact-xs"}
+              variant="filled"
+              color="blue"
+              onClick={() => actionableEffect && onUseCard(card, actionableEffect)}
+              disabled={isDisabled}
+              styles={{
+                root: {
+                  "&[data-disabled]": {
+                    backgroundColor: "var(--mantine-color-dark-9) !important",
+                    color: "var(--mantine-color-dark-5) !important",
+                    cursor: "not-allowed",
+                  },
+                },
+              }}
+            >
+              使用
+            </Button>
+          </Group>
+          }
+        centered
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        styles={{
+          content: { backgroundColor: "var(--mantine-color-dark-8)", borderColor: "var(--mantine-color-blue-9)" },
+          header: { backgroundColor: "var(--mantine-color-dark-8)", borderBottom: '1px solid var(--mantine-color-dark-6)' },
+          title: { color: "var(--mantine-color-blue-3)" },
+          close: { color: "var(--mantine-color-blue-3)" },
+        }}
+      >
+        <Container size="lg">
+          <Grid>
+            <Grid.Col span={"content"}>
+              <Image
+                src={card.imageUrl}
+                alt={card.name}
+                width={100}
+                height={150}
+                radius="md"
+                style={{ cursor: 'pointer', border: '2px solid var(--mantine-color-blue-6)' }}
+                onClick={() => setShowDetailsModal(true)} // 画像クリックでモーダルを開く
+                fallbackSrc="https://placehold.co/100x150/FF0000/FFFFFF?text=No+Image" // Fallback image
+              />
+            </Grid.Col>
+            <Grid.Col span={"auto"}>
+              <Stack gap="xs">
+                {card.effects.map((eff: any, i: number) => (
+                  <Group key={`modal-effect-${i}`} mt="xs" wrap="nowrap" align="flex-start">
+                    {eff.mode.endsWith('_modifier') ? (
+                        EFFECT_MODES[eff.mode.replace('_modifier', '') as keyof typeof EFFECT_MODES]
+                    ) : (
+                        EFFECT_MODES[eff.mode as keyof typeof EFFECT_MODES]
+                    )}
+                    <Text size="sm" c="white" dangerouslySetInnerHTML={{ __html: eff.effect.replace(/\n/g, '<br/>') }} />
+                  </Group>
+                ))}
+              </Stack>
+            </Grid.Col>
+          </Grid>
+        </Container>
+      </Modal>
     </Card>
   )
 }
@@ -389,7 +676,9 @@ function RemovalCardBlock({ card, ppCurrent, ppMax, onUseCard, actionableEffect 
 function ThreatBadge({ threat }: { threat: keyof typeof THREAT_COLORS }) {
   return (
     <Badge color={THREAT_COLORS[threat]} variant="light">
-      {THREAT_LABELS[threat]}
+      <Text color="white">
+        {THREAT_LABELS[threat]}
+      </Text>
     </Badge>
   )
 }
@@ -428,17 +717,18 @@ function NemesisTokenCard({ token, count, handleArtifactCountChange, handCount }
       <Group justify="space-between" wrap="nowrap">
         <Group>
           <Text size="sm" c="blue.4">{token.name}</Text>
-          <Badge color="cyan" variant="light">{count}枚</Badge>
-          <ActionIcon variant="light" color="blue" size="sm" onClick={() => handleArtifactCountChange(token.id, 1)} disabled={handCount >= 9}><IconPlus size={16} /></ActionIcon>
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => handleArtifactCountChange(token.id, -1)} disabled={count <= 0}><IconMinus size={16} /></ActionIcon>
+          {/* 修正箇所: BadgeからTextに変更し、サイズと太さを調整 */}
+          <Text size="lg" fw="bold" c="cyan.1">{count}枚</Text>
+          <ActionIcon variant="filled" color="blue" size="sm" onClick={() => handleArtifactCountChange(token.id, 1)} disabled={handCount >= 9}><IconPlus size={16} /></ActionIcon>
+          <ActionIcon variant="filled" color="red" size="sm" onClick={() => handleArtifactCountChange(token.id, -1)} disabled={count <= 0}><IconMinus size={16} /></ActionIcon>
         </Group>
-        <ActionIcon variant="light" onClick={() => setShowDetails(o => !o)} color="blue" size="md">
+        <ActionIcon variant="filled" onClick={() => setShowDetails(o => !o)} color="blue" size="md">
           {showDetails ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
         </ActionIcon>
       </Group>
       <Collapse in={showDetails}>
         <Stack gap="xs" mt="md" style={{ borderTop: '1px solid var(--mantine-color-dark-5)', paddingTop: '10px' }}>
-          <Text size="xs" c="dark.3">
+          <Text size="xs" c="blue.1">
             コスト: {token.cost}
             {token.attack !== null && <><br />攻撃力: {token.attack}</>}
             {token.defense !== null && <><br />体力: {token.defense}</>}
@@ -446,6 +736,65 @@ function NemesisTokenCard({ token, count, handleArtifactCountChange, handCount }
           </Text>
         </Stack>
       </Collapse>
+    </Card>
+  );
+}
+
+/**
+ * NumericCounter Component: A generic numeric counter with +/- buttons and a label.
+ * @param {object} props - Component props.
+ * @param {number} props.value - Current value.
+ * @param {function} props.onChange - Callback when value changes.
+ * @param {string} props.label - Label for the counter.
+ * @param {number} [props.min=0] - Minimum allowed value.
+ * @param {number} [props.max=Infinity] - Maximum allowed value.
+ */
+function NumericCounter({ value, onChange, label, min = 0, max = Infinity }: any) {
+  return (
+    <Card withBorder padding="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+      <Stack gap={4}>
+        <Text size="sm" c="blue.3">{label}</Text>
+        <Group justify="space-between" wrap="nowrap">
+          <ActionIcon
+            variant="light"
+            color="red"
+            size="lg"
+            onClick={() => onChange(Math.max(min, value - 1))}
+            disabled={value <= min}
+          >
+            <IconMinus size={20} />
+          </ActionIcon>
+          <NumberInput
+            value={value}
+            onChange={(val) => {
+              if (typeof val === 'number') {
+                onChange(Math.min(max, Math.max(min, val)));
+              }
+            }}
+            min={min}
+            max={max}
+            hideControls
+            styles={{
+              input: {
+                textAlign: 'center',
+                backgroundColor: "var(--mantine-color-dark-6)",
+                color: "var(--mantine-color-blue-1)",
+                border: "1px solid var(--mantine-color-dark-4)",
+              },
+            }}
+            maw={100}
+          />
+          <ActionIcon
+            variant="light"
+            color="blue"
+            size="lg"
+            onClick={() => onChange(Math.min(max, value + 1))}
+            disabled={value >= max}
+          >
+            <IconPlus size={20} />
+          </ActionIcon>
+        </Group>
+      </Stack>
     </Card>
   );
 }
@@ -469,6 +818,7 @@ export default function Home() {
   const [leader, setLeader] = useState<string | null>(null) // 初期値をnullに設定
   const [fairyCount, setFairyCount] = useState(0); // Add state for Fairy tokens
   const [showFairyDetails, setShowFairyDetails] = useState(false); // State for fairy details collapse
+  const [graveyardCount, setGraveyardCount] = useState(0); // New state for graveyard count
 
   // ネメシスアーティファクトトークンの状態
   const [puppetCount, setPuppetCount] = useState(0);
@@ -520,6 +870,7 @@ export default function Home() {
     setEvolveUsedThisTurn(false);
     setHandCount(4);
     setFairyCount(0);
+    setGraveyardCount(0); // Reset graveyard count
     // ネメシスアーティファクトトークンのリセット
     setPuppetCount(0);
     setEnhancedPuppetCount(0);
@@ -567,47 +918,66 @@ export default function Home() {
     return REMOVAL_CARDS
       .filter((card) => card.leader === leader || card.leader === "neutral")
       .map((card) => {
-        let calculatedDisplayCost = card.baseCost; // デフォルトはカードの基本コスト
+        // 1. Determine the primary actionable effect (default or enhance)
+        const actionableEffectForButton = getActionableEffect(card, {
+          turn, pp: ppCurrent, ppMax, ep, sep, graveyardCount, evolveUsedThisTurn, isEpUsable, isSepUsable
+        });
 
-        const defaultEffect = card.effects.find(e => e.mode === 'default');
-        const enhanceEffect = card.effects.find(e => e.mode === 'enhance');
-
-        // 表示コストの優先順位:
-        // 1. 現在のPPで利用可能なエンハンス効果のコスト
-        // 2. デフォルト効果のコスト (利用可能かどうかに関わらず)
-        // 3. 上記がなければカードの基本コスト (主に進化・超進化のみのカードの場合)
-        // 進化・超進化の0コストは、この表示コストには使用しない
-        if (enhanceEffect && enhanceEffect.cost <= ppCurrent) {
-            calculatedDisplayCost = enhanceEffect.cost;
-        } else if (defaultEffect) {
-            calculatedDisplayCost = defaultEffect.cost;
+        // 2. If no primary actionable effect, the card is not playable via its main cost
+        if (!actionableEffectForButton) {
+            return null;
         }
 
-        // Determine the actionable effect for the card based on current game state
-        const actionableEffect = getActionableEffect(card, {
-          turn, pp: ppCurrent, ep, sep, evolveUsedThisTurn, isEpUsable, isSepUsable
+        // 3. The display cost is always from the primary actionable effect
+        const calculatedDisplayCost = actionableEffectForButton.cost;
+
+        // 4. Build the list of all *currently active* effects for display in HoverCard
+        const displayableEffects = [];
+
+        // Add the primary actionable effect first
+        displayableEffects.push(actionableEffectForButton);
+
+        // Add other active effects (Evolve, Super-evolve, Necromancy, Awakening)
+        // Ensure we don't duplicate the primary actionable effect
+        card.effects.forEach((eff: any) => {
+            // Skip if it's the same as the primary actionable effect (already added)
+            if (eff === actionableEffectForButton) return;
+
+            // Check if this other effect is active based on its own conditions
+            if (isEffectActive(eff, {
+                turn, pp: ppCurrent, ppMax, ep, sep, graveyardCount, cardEffects: card.effects,
+                evolveUsedThisTurn, isEpUsable, isSepUsable,
+            })) {
+                // If it's a modifier, adjust mode for display
+                const displayMode = eff.mode.endsWith('_modifier') ? eff.mode.replace('_modifier', '') : eff.mode;
+                displayableEffects.push({ ...eff, mode: displayMode });
+            }
+        });
+
+        // Sort the final displayable effects list for consistent presentation
+        // Prioritize: Enhance > Default > Awakening > Necromancy > Evolve > Super-evolve
+        displayableEffects.sort((a: any, b: any) => {
+            const order = {
+                'enhance': 1,
+                'default': 2,
+                'awakening': 3,
+                'necromancy': 4,
+                'evolve': 5,
+                'super_evolve': 6,
+            };
+            return (order[a.mode as keyof typeof order] || 99) - (order[b.mode as keyof typeof order] || 99);
         });
 
         return {
           ...card,
-          displayCost: calculatedDisplayCost, // この新しいプロパティを表示コストとして使用
-          actionableEffect: actionableEffect, // アクション可能な効果をカードオブジェクトに追加
-          availableEffects: card.effects
-            .filter((eff: any) => isEffectActive(eff, { turn, pp: ppCurrent, ep, sep, cardEffects: card.effects, evolveUsedThisTurn, isEpUsable, isSepUsable }))
-            .sort((a: any, b: any) => {
-              // 各カード内の利用可能な効果のソート順 (カード名の下のリスト用)
-              // 優先順位: PPが足りるエンハンス > デフォルト > コスト降順
-              if (a.mode === 'enhance' && a.cost <= ppCurrent && b.mode !== 'enhance') return -1;
-              if (b.mode === 'enhance' && b.cost <= ppCurrent && a.mode !== 'enhance') return 1;
-              if (a.mode === 'default' && b.mode !== 'default' && b.mode !== 'enhance') return -1;
-              if (b.mode === 'default' && a.mode !== 'default' && a.mode !== 'enhance') return 1;
-              return b.cost - a.cost;
-            }),
+          displayCost: calculatedDisplayCost,
+          actionableEffect: actionableEffectForButton, // The effect for the button
+          availableEffects: displayableEffects, // The list of effects to display
         };
       })
-      .filter((c) => c.actionableEffect !== null) // アクション可能な効果があるカードのみを表示
-      .sort((a, b) => b.displayCost - a.displayCost); // メインリストを新しい表示コストでソート
-  }, [leader, turn, ppCurrent, ep, sep, evolveUsedThisTurn, isEpUsable, isSepUsable, handCount]);
+      .filter((c) => c !== null) // Filter out nulls (cards not playable)
+      .sort((a, b) => b.displayCost - a.displayCost); // Sort by display cost
+  }, [leader, turn, ppCurrent, ppMax, ep, sep, graveyardCount, evolveUsedThisTurn, isEpUsable, isSepUsable, handCount]);
 
   const currentStrongMoves = useMemo(() => {
     // リーダーが未選択の場合は強い動きを一切表示しない
@@ -665,6 +1035,10 @@ export default function Home() {
     setHandCount((prev) => Math.min(prev + 1, 9))
     setEvolveUsedThisTurn(false)
     setExtraPPUsedThisTurn(false);
+    // Increment graveyard count by 1 each turn (representing a card drawn and potentially discarded later)
+    // Or more accurately, a card played from hand goes to graveyard.
+    // For simplicity, let's assume one card goes to graveyard each turn.
+    setGraveyardCount(prev => prev + 1); // Increment graveyard count
     // Reset fairy count if leader changes or turn advances
     if (leader !== "elf") { // Only reset if not Elf, otherwise it's managed by user
         setFairyCount(0);
@@ -723,10 +1097,27 @@ export default function Home() {
 
   const handleUseCard = useCallback((card: any, effectToUse: any) => {
     const newPp = Math.max(0, ppCurrent - effectToUse.cost)
-    const newHandCount = Math.max(0, handCount - 1)
+    let newHandCount = Math.max(0, handCount - 1)
+    let newGraveyardCount = graveyardCount;
+
+    // If necromancy effect is used, consume graveyard count
+    // This logic needs to be careful: effectToUse is the PRIMARY effect.
+    // We need to check if the card *also* had an active necromancy_modifier.
+    const necromancyModifier = card.effects.find((eff: any) => eff.mode === 'necromancy_modifier');
+    if (necromancyModifier && isEffectActive(necromancyModifier, {
+        turn, pp: ppCurrent, ppMax, ep, sep, graveyardCount, cardEffects: card.effects,
+        evolveUsedThisTurn, isEpUsable, isSepUsable,
+    })) {
+        newGraveyardCount = Math.max(0, graveyardCount - (necromancyModifier.conditions?.necromancyCost || 0));
+    } else {
+      // For any card played from hand (that isn't a consumed Necromancy), it goes to graveyard
+      newGraveyardCount = graveyardCount + 1;
+    }
+
 
     setPpCurrent(newPp)
     setHandCount(newHandCount)
+    setGraveyardCount(newGraveyardCount); // Update graveyard count
     setGameHistory((prev) => [
       ...prev,
       {
@@ -747,7 +1138,7 @@ export default function Home() {
         // The handCount already decreases, so the visual representation will adjust.
         // No direct change to fairyCount here unless the card itself is a fairy.
     }
-  }, [ppCurrent, handCount, turn, fairyCount])
+  }, [ppCurrent, handCount, graveyardCount, turn, fairyCount, ppMax])
 
 
   const handlePpMaxIncrease = useCallback(() => {
@@ -813,22 +1204,21 @@ export default function Home() {
     const currentCount = getArtifactCount(tokenId);
     const newCount = Math.max(0, currentCount + change);
 
-    // If adding an artifact
-    if (change > 0) {
-      if (handCount < 9) { // Only add if total hand count is less than 9
-        setArtifactCount(tokenId, newCount);
-        setHandCount(prev => prev + 1); // Increase total hand count
-      } else {
-        setSynthesisError("手札が上限に達しているため、これ以上トークンを追加できません。");
-        // TODO: ユーザーへのフィードバック
-      }
-    } else { // If removing an artifact
-      if (currentCount > 0) { // Only remove if current count is greater than 0
-        setArtifactCount(tokenId, newCount);
-        setHandCount(prev => Math.max(0, prev - 1)); // Decrease total hand count
-      }
+    // Update the specific token count
+    setArtifactCount(tokenId, newCount);
+
+    // If removing an artifact, decrease hand count.
+    // If adding, hand count will be adjusted by the useEffect based on totalKnownArtifacts.
+    if (change < 0 && currentCount > 0) {
+      setHandCount(prev => Math.max(0, prev - 1));
     }
-  }, [getArtifactCount, setArtifactCount, handCount]);
+  }, [getArtifactCount, setArtifactCount]);
+
+  // Effect to synchronize handCount with totalKnownArtifacts
+  // Ensures handCount is always at least totalKnownArtifacts
+  useEffect(() => {
+    setHandCount(prevHandCount => Math.max(prevHandCount, totalKnownArtifacts));
+  }, [totalKnownArtifacts]);
 
   // Synthesis Logic
   const executeSynthesis = useCallback((materialsToConsume: Record<string, number>, targetArtifactId: string) => {
@@ -1212,10 +1602,7 @@ export default function Home() {
               value={handCount}
               max={9}
               onChange={(val: number) => {
-                setHandCount(val);
-                // Note: When handCount is manually reduced, if totalKnownArtifacts exceeds new handCount,
-                // it's up to the user to manually adjust artifact counts using +/- buttons.
-                // A more complex solution would involve prompting the user to discard artifacts.
+                setHandCount(Math.max(val, totalKnownArtifacts)); // Ensure handCount is at least totalKnownArtifacts
               }}
               label="相手の手札枚数"
               knownCount={totalKnownArtifacts} // Reflect total known artifacts
@@ -1227,6 +1614,16 @@ export default function Home() {
               onChange={(val: number) => setPpCurrent(Math.min(val, ppMax))}
               label={`現在のPP（上限: ${ppMax}）`}
             />
+
+            {leader === "nightmare" && (
+                <NumericCounter
+                    value={graveyardCount}
+                    onChange={setGraveyardCount}
+                    label="墓地枚数"
+                    min={0}
+                    // No max for graveyard count, it can grow indefinitely
+                />
+            )}
 
             <Group wrap="nowrap">
               {leader === "dragon" && (
@@ -1374,6 +1771,24 @@ export default function Home() {
               >
                 トークン管理
               </Tabs.Tab>
+              <Tabs.Tab
+                value="strong_moves"
+                leftSection={<IconBrain size={16} />}
+                style={{ color: "white" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
+              >
+                強い動き
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="history"
+                leftSection={<IconHistory size={16} />}
+                style={{ color: "white" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
+              >
+                履歴
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="removal" pt="md">
@@ -1382,7 +1797,7 @@ export default function Home() {
                   使用可能な除去カード
                 </Title>
                 <ScrollArea h={500}>
-                  <Stack gap="sm">
+                  <Group gap="sm">
                     {filteredCards.length > 0 ? (
                       filteredCards.map((card) => (
                         <RemovalCardBlock
@@ -1397,7 +1812,7 @@ export default function Home() {
                     ) : (
                       <Text c="blue.4">現在使用可能な除去カードはありません。</Text>
                     )}
-                  </Stack>
+                  </Group>
                 </ScrollArea>
               </Stack>
             </Tabs.Panel>
@@ -1452,7 +1867,7 @@ export default function Home() {
                 ) : leader === "nemesis" ? (
                   <Stack gap="md">
                     <Text size="sm" c="blue.4" mb="xs">
-                      ネメシスアーティファクトトークン
+                      操り人形トークン
                     </Text>
                     <Grid gutter="xs">
                       {/* 操り人形、強化型操り人形 */}
@@ -1472,7 +1887,12 @@ export default function Home() {
                           handCount={handCount}
                         />
                       </Grid.Col>
+                    </Grid>
 
+                    <Text size="sm" c="blue.4" mb="xs" mt="md">
+                      コア・アーティファクト
+                    </Text>
+                    <Grid gutter="xs">
                       {/* パストコア、フューチャーコア */}
                       <Grid.Col span={6}>
                         <NemesisTokenCard
@@ -1558,6 +1978,15 @@ export default function Home() {
                         variant="gradient"
                         gradient={{ from: "teal.8", to: "teal.6" }}
                         leftSection={<IconBoxMultiple size={16} />}
+                        styles={{
+                          root: {
+                            "&[data-disabled]": {
+                              backgroundColor: "var(--mantine-color-dark-9) !important",
+                              color: "var(--mantine-color-dark-5) !important",
+                              cursor: "not-allowed",
+                            },
+                          },
+                        }}
                       >
                         キャッスル合成
                       </Button>
@@ -1568,6 +1997,15 @@ export default function Home() {
                         variant="gradient"
                         gradient={{ from: "teal.8", to: "teal.6" }}
                         leftSection={<IconBoxMultiple size={16} />}
+                        styles={{
+                          root: {
+                            "&[data-disabled]": {
+                              backgroundColor: "var(--mantine-color-dark-9) !important",
+                              color: "var(--mantine-color-dark-5) !important",
+                              cursor: "not-allowed",
+                            },
+                          },
+                        }}
                       >
                         アタック合成
                       </Button>
@@ -1580,6 +2018,15 @@ export default function Home() {
                         variant="gradient"
                         gradient={{ from: "orange.8", to: "orange.6" }}
                         leftSection={<IconBoxMultiple size={16} />}
+                        styles={{
+                          root: {
+                            "&[data-disabled]": {
+                              backgroundColor: "var(--mantine-color-dark-9) !important",
+                              color: "var(--mantine-color-dark-5) !important",
+                              cursor: "not-allowed",
+                            },
+                          },
+                        }}
                       >
                         デストロイα合成
                       </Button>
@@ -1590,6 +2037,15 @@ export default function Home() {
                         variant="gradient"
                         gradient={{ from: "orange.8", to: "orange.6" }}
                         leftSection={<IconBoxMultiple size={16} />}
+                        styles={{
+                          root: {
+                            "&[data-disabled]": {
+                              backgroundColor: "var(--mantine-color-dark-9) !important",
+                              color: "var(--mantine-color-dark-5) !important",
+                              cursor: "not-allowed",
+                            },
+                          },
+                        }}
                       >
                         デストロイβ合成
                       </Button>
@@ -1608,6 +2064,15 @@ export default function Home() {
                         variant="gradient"
                         gradient={{ from: "orange.8", to: "orange.6" }}
                         leftSection={<IconBoxMultiple size={16} />}
+                        styles={{
+                          root: {
+                            "&[data-disabled]": {
+                              backgroundColor: "var(--mantine-color-dark-9) !important",
+                              color: "var(--mantine-color-dark-5) !important",
+                              cursor: "not-allowed",
+                            },
+                          },
+                        }}
                       >
                         デストロイγ合成
                       </Button>
@@ -1619,6 +2084,15 @@ export default function Home() {
                       variant="gradient"
                       gradient={{ from: "grape.8", to: "grape.6" }}
                       leftSection={<IconBoxMultiple size={16} />}
+                      styles={{
+                        root: {
+                          "&[data-disabled]": {
+                            backgroundColor: "var(--mantine-color-dark-9) !important",
+                            color: "var(--mantine-color-dark-5) !important",
+                            cursor: "not-allowed",
+                          },
+                        },
+                      }}
                     >
                       イクシードΩ合成
                     </Button>
@@ -1642,6 +2116,55 @@ export default function Home() {
                     },
                   }}
                 />
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="strong_moves" pt="md">
+              <Stack gap="md">
+                <Title order={3} c="blue.3">
+                  相手の強い動き
+                </Title>
+                {currentStrongMoves.length > 0 ? (
+                  currentStrongMoves.map((move, i) => (
+                    <Card key={i} withBorder p="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                      <Group justify="space-between">
+                        <Text size="sm" c="blue.4">
+                          T{move.turn}: {move.move}
+                        </Text>
+                        <ThreatBadge threat={move.threat as keyof typeof THREAT_COLORS} />
+                      </Group>
+                    </Card>
+                  ))
+                ) : (
+                  <Text c="blue.4">このリーダーの強い動きはまだ記録されていません。</Text>
+                )}
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="history" pt="md">
+              <Stack gap="md">
+                <Title order={3} c="blue.3">
+                  ゲーム履歴
+                </Title>
+                <ScrollArea h={500}>
+                  <Stack gap="xs">
+                    {gameHistory
+                      .slice(-20)
+                      .reverse()
+                      .map((entry, i) => (
+                        <Card key={i} withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
+                          <Group justify="space-between">
+                            <Text size="sm" c="blue.4">
+                              T{entry.turn}: {entry.action}
+                            </Text>
+                            <Text size="xs" c="dark.3">
+                              PP:{entry.pp} 手札:{entry.hand}
+                            </Text>
+                          </Group>
+                        </Card>
+                      ))}
+                  </Stack>
+                </ScrollArea>
               </Stack>
             </Tabs.Panel>
           </Tabs>
@@ -1752,7 +2275,7 @@ export default function Home() {
                       value="past_core_x2"
                       label={`パスト・コア 2枚 (${pastCoreCount}枚所持)`}
                       disabled={pastCoreCount < 2}
-                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                     />
                   </Card>
                   <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
@@ -1760,7 +2283,7 @@ export default function Home() {
                       value="past_future_x1"
                       label={`パスト・コア 1枚とフューチャー・コア 1枚 (${pastCoreCount}枚/ ${futureCoreCount}枚所持)`}
                       disabled={!(pastCoreCount >= 1 && futureCoreCount >= 1)}
-                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                     />
                   </Card>
                 </Stack>
@@ -1790,7 +2313,7 @@ export default function Home() {
                       value="future_core_x2"
                       label={`フューチャー・コア 2枚 (${futureCoreCount}枚所持)`}
                       disabled={futureCoreCount < 2}
-                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                     />
                   </Card>
                   <Card withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
@@ -1798,7 +2321,7 @@ export default function Home() {
                       value="past_future_x1"
                       label={`パスト・コア 1枚とフューチャー・コア 1枚 (${pastCoreCount}枚/ ${futureCoreCount}枚所持)`}
                       disabled={!(pastCoreCount >= 1 && futureCoreCount >= 1)}
-                      styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                      styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                     />
                   </Card>
                 </Stack>
@@ -1829,7 +2352,7 @@ export default function Home() {
                         value={material.id}
                         label={`${material.name} (${material.currentCount}枚)`}
                         disabled={material.currentCount === 0}
-                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                       />
                     </Card>
                   ))}
@@ -1858,7 +2381,7 @@ export default function Home() {
                           value={material.id}
                           label={`${material.name} (${material.currentCount}枚)`}
                           disabled={material.currentCount === 0}
-                          styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                          styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                         />
                       </Card>
                     </Grid.Col>
@@ -1891,7 +2414,7 @@ export default function Home() {
                         value={material.id}
                         label={`${material.name} (${material.currentCount}枚)`}
                         disabled={material.currentCount === 0}
-                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                       />
                     </Card>
                   ))}
@@ -1924,7 +2447,7 @@ export default function Home() {
                         <Radio
                           value={JSON.stringify(combo.materials)}
                           label={combo.name}
-                          styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                          styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                         />
                       </Card>
                     </Grid.Col>
@@ -1959,7 +2482,7 @@ export default function Home() {
                         value={material.id}
                         label={`${material.name} (${material.currentCount}枚)`}
                         disabled={material.currentCount === 0}
-                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                       />
                     </Card>
                   ))}
@@ -1997,7 +2520,7 @@ export default function Home() {
                             value={material.id}
                             label={`${material.name} (${material.currentCount}枚)`}
                             disabled={isDisabled}
-                            styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                            styles={{ label: { color: "var(--mantine-color-blue-1)" }, radio: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                           />
                         </Card>
                       </Grid.Col>
@@ -2020,7 +2543,7 @@ export default function Home() {
                         onChange={(e) => handleMaterialSelection(material.id, e.currentTarget.checked)}
                         label={`${material.name} (${material.currentCount}枚)`}
                         disabled={material.currentCount === 0}
-                        styles={{ label: { color: "var(--mantine-color-blue-2)" } }}
+                        styles={{ label: { color: "var(--mantine-color-blue-1)" }, input: { '&[data-checked]': { backgroundColor: 'var(--mantine-color-blue-6)' }, '&[data-disabled]': { borderColor: 'var(--mantine-color-dark-5)', backgroundColor: 'var(--mantine-color-dark-7)' } } }}
                       />
                     </Card>
                   </Grid.Col>
@@ -2085,6 +2608,15 @@ export default function Home() {
             size="md"
             variant="gradient"
             gradient={{ from: "blue.8", to: "blue.6" }}
+            styles={{
+              root: {
+                "&[data-disabled]": {
+                  backgroundColor: "var(--mantine-color-dark-9) !important", // Darker background
+                  color: "var(--mantine-color-dark-5) !important", // Darker text
+                  cursor: "not-allowed",
+                },
+              },
+            }}
           >
             合成実行
           </Button>
