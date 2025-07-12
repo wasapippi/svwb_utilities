@@ -69,7 +69,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 2, conditions: {}, effect: "ナイト1枚を自分の場に出す。<br> 自分の兵士・フォロワーが場に出たとき、それは【突進】を持つ" },
     ],
-    imageUrl: "/img/1/royal/勇猛のルミナスランサー.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/勇猛のルミナスランサー.png", // Placeholder image
   },{
     id: "royal2",
     name: "異端の侍",
@@ -81,7 +81,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 2, conditions: {}, effect: "超進化可能ターンなら、これは【必殺】を持つ<br>【突進】" },
     ],
-    imageUrl: "/img/1/royal/異端の侍.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/異端の侍.png", // Placeholder image
   },{
     id: "royal3",
     name: "刹那のクイックブレイダー",
@@ -93,7 +93,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 1, conditions: {}, effect: "【疾走】" },
     ],
-    imageUrl: "/img/1/royal/刹那のクイックブレイダー.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/刹那のクイックブレイダー.png", // Placeholder image
   },{
     id: "royal4",
     name: "ミリタリードッグ",
@@ -106,7 +106,7 @@ const REMOVAL_CARDS = [
       { mode: "default", cost: 3, conditions: {}, effect: "突進" },
       { mode: "enhance", cost: 6, conditions: {}, effect: "【6コスト】ミリタリードッグ2枚を自分の場に出す" },
     ],
-    imageUrl: "/img/1/royal/ミリタリードッグ.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/ミリタリードッグ.png", // Placeholder image
   },{
     id: "royal5",
     name: "サイレントスナイパー・ワルツ",
@@ -119,7 +119,7 @@ const REMOVAL_CARDS = [
       { mode: "default", cost: 3, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それに5ダメージ" },
       { mode: "enhance", cost: 6, conditions: {}, effect: "【6コスト】これは+2/+2して【潜伏】を持つ" },
     ],
-    imageUrl: "/img/1/royal/サイレントスナイパー・ワルツ.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/サイレントスナイパー・ワルツ.png", // Placeholder image
   },{
     id: "royal6",
     name: "レヴィオンの迅雷・アルベール",
@@ -132,7 +132,7 @@ const REMOVAL_CARDS = [
       { mode: "default", cost: 5, conditions: {}, effect: "【疾走】" },
       { mode: "enhance", cost: 9, conditions: {}, effect: "【9コスト】相手の場のフォロワーすべてに3ダメージ。これは「1ターンに2回攻撃できる。」をもつ" },
     ],
-    imageUrl: "/img/1/royal/レヴィオンの迅雷・アルベール.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/レヴィオンの迅雷・アルベール.png", // Placeholder image
   },{
     id: "royal7",
     name: "レヴィオンアックス・ジェノ",
@@ -144,7 +144,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 7, conditions: {}, effect: "【突進】<br>1ターンに2回攻撃できる。<br>【攻撃時】これは【バリア】を持つ。ナイト1枚を自分の場に出す" },
     ],
-    imageUrl: "/img/1/royal/レヴィオンアックス・ジェノ.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/レヴィオンアックス・ジェノ.png", // Placeholder image
   },{
     id: "royal8",
     name: "テンタクルバイト",
@@ -154,7 +154,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 7, conditions: {}, effect: "相手の場のフォロワー1枚か相手のリーダーを選ぶ。それに5ダメージ。自分のリーダーを5回復" },
     ],
-    imageUrl: "/img/1/royal/テンタクルバイト.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/テンタクルバイト.png", // Placeholder image
   },{
     id: "royal9",
     name: "ケンタウロスの騎士",
@@ -166,7 +166,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 8, conditions: {}, effect: "【疾走】" },
     ],
-    imageUrl: "/img/1/royal/ケンタウロスの騎士.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/ケンタウロスの騎士.png", // Placeholder image
   },{
     id: "royal10",
     name: "煌刃の勇者・アマリア",
@@ -178,7 +178,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 8, conditions: {}, effect: "スティールナイト(2/2)4枚を自分の場に出す。<br>自分の他のフォロワーが場に出たとき、それは+1/+0して【突進】と【守護】を持つ。" },
     ],
-    imageUrl: "/img/1/royal/煌刃の勇者・アマリア.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/煌刃の勇者・アマリア.png", // Placeholder image
   },{
     id: "royal11",
     name: "剣士の斬撃",
@@ -188,7 +188,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: "default", cost: 8, conditions: {}, effect: "相手の場のフォロワー1枚を選ぶ。それを破壊。『スティールナイト』1枚を自分の場に出す。s" },
     ],
-    imageUrl: "/img/1/royal/剣士の斬撃.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/royal/剣士の斬撃.png", // Placeholder image
   },
 
   
@@ -203,7 +203,7 @@ const REMOVAL_CARDS = [
     effects: [
       { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それを破壊' },
     ],
-    imageUrl: "/img/1/neutral/楽朗の天宮・フィルドア.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/neutral/楽朗の天宮・フィルドア.png", // Placeholder image
   },{
     id: "neutral2",
     name: "迸る巧妙・アポロン",
@@ -216,7 +216,7 @@ const REMOVAL_CARDS = [
       { mode: "default", cost: 3, conditions: {}, effect: "敵全体に1ダメージ" },
       { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: "敵全体に1ダメージ" },
     ],
-    imageUrl: "/img/1/neutral/迸る巧妙・アポロン.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/neutral/迸る巧妙・アポロン.png", // Placeholder image
   },{
     id: "neutral3",
     name: "神の雷霆",
@@ -224,7 +224,7 @@ const REMOVAL_CARDS = [
     leader: "neutral",
     baseCost: 4,
     effects: [{ mode: "default", cost: 5, conditions: {}, effect: "相手の場の攻撃力最大のフォロワーからランダムに1枚を破壊。相手の場のフォロワーすべてに1ダメージ" }],
-    imageUrl: "/img/1/neutral/神の雷霆.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/neutral/神の雷霆.png", // Placeholder image
   },{
     id: "neutral5",
     name: "勇壮の堕天使・オリヴィエ",
@@ -237,7 +237,7 @@ const REMOVAL_CARDS = [
       { mode: "default", cost: 7, conditions: {}, effect: "自分のデッキから2枚引く。自分のリーダーを2回復。自分のPPを2回復" },
       { mode: 'super_evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: "自分の場の他の進化前野フォロワーを1枚選ぶ。それは超進化する" },
     ],
-    imageUrl: "/img/1/neutral/勇壮の堕天使・オリヴィエ.png", // Placeholder image
+    imageUrl: "/svwb_utilities/img/1/neutral/勇壮の堕天使・オリヴィエ.png", // Placeholder image
   },
   {
     id: "orivie",
