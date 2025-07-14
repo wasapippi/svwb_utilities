@@ -851,26 +851,337 @@ const REMOVAL_CARDS = [
     toughness: 8,
     effects: [
       { mode: "default", cost: 10, conditions: {}, effect: "『改良型操り人形』3枚を自分の場に出す" },
-      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '自分の場の人形フォロワーすべては【守護】と「【ラストワード】相手のリーダーに2ダメージ。」を持つ。' }
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '自分の場の人形フォロワーすべては【守護】と「【ラストワード】相手のリーダーに2ダメージ。」を持つ。' }
     ],
     imageUrl: "/svwb_utilities/img/1/nemesis/狂気の創造者・リーアム.png", // Placeholder image
   },
   {
-    id: "orivie",
-    name: "オリヴィエ",
+    id: "nightmare1",
+    name: "死神の一振り",
+    type: "spell",
+    leader: "nightmare",
+    baseCost: 1,
+    effects: [
+      { mode: "default", cost: 1, conditions: { }, effect: "自分の場のフォロワー1枚と相手の場のフォロワー1枚を選ぶ。それを破壊。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/死神の一振り.png", // Placeholder image
+  },
+  {
+    id: "nightmare2",
+    name: "悪辣のレッサーマミー",
     type: "follower",
-    leader: "witch",
-    baseCost: 3,
+    leader: "nightmare",
+    baseCost: 2,
     attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: { }, effect: "-" },
+      { mode: "necromancy_modifier", cost: 0, conditions: { necromancyCost: 4 }, effect: "【ネクロマンス_4】これは【疾走】を持つ。" }, // Changed to modifier
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/悪辣のレッサーマミー.png", // Placeholder image
+  },
+  {
+    id: "nightmare3",
+    name: "蛇神の怒り",
+    type: "spell",
+    leader: "nightmare",
+    baseCost: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "相手の場のフォロワー1枚か相手のリーダーを選ぶ。それに3ダメージ。自分のリーダーに2ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/蛇神の怒り.png", // Placeholder image
+  },
+  {
+    id: "nightmare4",
+    name: "燃え盛る魔剣オルトロス",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "自分の墓場を+2する。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1, necromancyCost :4 }, effect: '【ネクロマンス_4】「相手の場のフォロワーからランダム1枚に2ダメージ。」を2回行う。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/燃え盛る魔剣オルトロス.png", // Placeholder image
+  },
+  {
+    id: "nightmare5",
+    name: "辣腕の死神ミーノ",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 2,
+    attack: 2,
+    toughness: 2,
+    effects: [
+      { mode: "default", cost: 2, conditions: {}, effect: "【ラストワード】『スケルトン』1枚を自分の手札に加える。" },
+      { mode: 'enhance', cost: 4, conditions: {}, effect: '【エンハンス_4】これは【突進】と【必殺】を持つ。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/辣腕の死神ミーノ.png", // Placeholder image
+  },
+  {
+    id: "nightmare6",
+    name: "ミッドナイトヴァンパイアエラル",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 3,
+    attack: 1,
+    toughness: 1,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【ファンファーレ】『バット』1枚を自分の場に出す。<br>自分の『バット』が場に出たとき、それは【疾走】を持つ。自分のリーダーに1ダメージ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/ミッドナイトヴァンパイアエラル.png", // Placeholder image
+  },
+  {
+    id: "nightmare7",
+    name: "瞑地の霊園",
+    type: "spell",
+    leader: "nightmare",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "自分の墓場を+2する。<br>【アクト】これを破壊。『ゴースト』2枚を自分の場に出す。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/瞑地の霊園.png", // Placeholder image
+  },
+  {
+    id: "nightmare8",
+    name: "ラバーズネクロマンサー",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 4,
+    attack: 5,
+    toughness: 4,
+    effects: [
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '『ゴースト』2枚を自分の場に出す。' },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '『ゴースト』2枚を自分の場に出す。それは【ドレイン】を持つ。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/ラバーズネクロマンサー.png", // Placeholder image
+  },
+  {
+    id: "nightmare9",
+    name: "エンドレスハンターアラガヴィ",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 5,
+    attack: 4,
     toughness: 3,
     effects: [
-      { mode: "default", cost: 3, conditions: {}, effect: "敵1体に3ダメージ" },
-      { mode: "enhance", cost: 6, conditions: {}, effect: "敵全体に3ダメージ（エンハンス）" },
-      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '進化時：他フォロワー進化' },
-      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '超進化時：他フォロワー超進化' }
+      { mode: "default", cost: 5, conditions: {}, effect: "自分の墓場を+2する。<br>相手の場のフォロワーすべてに7ダメージを割りふる。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: 'リーダーすべてに3ダメージ。' },
     ],
-    imageUrl: "https://placehold.co/100x150/000000/FFFFFF?text=オリヴィエ", // Placeholder image
-  }
+    imageUrl: "/svwb_utilities/img/1/nightmare/エンドレスハンターアラガヴィ.png", // Placeholder image
+  },
+  {
+    id: "nightmare10",
+    name: "禁約の悪魔",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 5,
+    attack: 4,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "自分の墓場を+2する。<br>自分のデッキから2枚を引く。自分のリーダーに2ダメージ。" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに6ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/禁約の悪魔.png", // Placeholder image
+  },
+  {
+    id: "nightmare11",
+    name: "ウルフマスター",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 6,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "【疾走】<br>【必殺】" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それに6ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/ウルフマスター.png", // Placeholder image
+  },
+  {
+    id: "nightmare12",
+    name: "猛毒姫・メドゥーサ",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 7,
+    attack: 3,
+    toughness: 7,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "【突進】<br>1ターンに3回攻撃できる。<br>【攻撃時】フォロワーへの攻撃なら、交戦相手を破壊。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/猛毒姫・メドゥーサ.png", // Placeholder image
+  },
+  {
+    id: "nightmare13",
+    name: "串刺し公・ヴラド",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 8,
+    attack: 5,
+    toughness: 8,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "【ファンファーレ】相手の場のフォロワー1枚を選ぶ。それに5ダメージ。自分のリーダーを5回復。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/串刺し公・ヴラド.png", // Placeholder image
+  },
+  {
+    id: "nightmare14",
+    name: "奔放なる獄炎・ケルベロス",
+    type: "follower",
+    leader: "nightmare",
+    baseCost: 8,
+    attack: 6,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "『番犬の右腕ミミ』1枚と『番犬の左腕ココ』1枚を自分の場に出す。【ネクロマンス_6】自分の場の他のフォロワーすべては+2/+0する。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '【リアニメイト_1】を2回行う。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/nightmare/奔放なる獄炎・ケルベロス.png", // Placeholder image
+  },
+  {
+    id: "bishop1",
+    name: "セイクリッドインジェクション",
+    type: "spell",
+    leader: "bishop",
+    baseCost: 3,
+    effects: [
+      { mode: "default", cost: 3, conditions: {}, effect: "【アクト】これを破壊。相手の場のフォロワー1枚を選ぶ。それに4ダメージ。自分のリーダーを1回復。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/セイクリッドインジェクション.png", // Placeholder image
+  },
+  {
+    id: "bishop2",
+    name: "禁密の天宮・ロナヴェロ",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 4,
+    attack: 1,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "【潜伏】" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場のフォロワー1枚を選ぶ。それを破壊。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/禁密の天宮・ロナヴェロ.png", // Placeholder image
+  },
+  {
+    id: "bishop3",
+    name: "鉄拳の神父",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 4,
+    attack: 5,
+    toughness: 4,
+    effects: [
+      { mode: "default", cost: 4, conditions: {}, effect: "-" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手の場の体力3以下のフォロワー1枚を選ぶ。それを消滅。' },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '1枚を選ぶのではなくすべて。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/鉄拳の神父.png", // Placeholder image
+  },
+  {
+    id: "bishop4",
+    name: "水の守護神サレファ",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 5,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "自分のリーダーを3回復。<br>【守護】" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手のフォロワーすべてに3ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/鉄拳の神父.png", // Placeholder image
+  },
+  {
+    id: "bishop5",
+    name: "終焉のスカルフェイン",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 6,
+    attack: 4,
+    toughness: 4,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "自分の場のアミュレットすべてを破壊。相手の場のフォロワーすべてと相手のリーダーにXダメージ。Xはこれで破壊した枚数である。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/終焉のスカルフェイン.png", // Placeholder image
+  },
+  {
+    id: "bishop6",
+    name: "水の守護神・サレファ",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 5,
+    attack: 3,
+    toughness: 3,
+    effects: [
+      { mode: "default", cost: 5, conditions: {}, effect: "自分のリーダーを3回復。<br>【守護】" },
+      { mode: 'evolve', cost: 0, conditions: { evolveTokenMin: 1 }, effect: '相手のフォロワーすべてに3ダメージ。' },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/水の守護神・サレファ.png", // Placeholder image
+  },
+  {
+    id: "bishop7",
+    name: "邪教の器",
+    type: "spell",
+    leader: "bishop",
+    baseCost: 6,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "自分のリーダーを3回復。<br>【アクト】これを破壊。場のフォロワーすべてを破壊。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/邪教の器.png", // Placeholder image
+  },
+  {
+    id: "bishop8",
+    name: "フェザーレイン",
+    type: "spell",
+    leader: "bishop",
+    baseCost: 6,
+    effects: [
+      { mode: "default", cost: 6, conditions: {}, effect: "相手の場のフォロワーすべてに3ダメージ。『ホーリーファルコン』1枚を自分の場に出す。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/フェザーレイン.png", // Placeholder image
+  },
+  {
+    id: "bishop9",
+    name: "裁決のアナテマ・ロデオ",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 7,
+    attack: 5,
+    toughness: 5,
+    effects: [
+      { mode: "default", cost: 7, conditions: {}, effect: "自分の手札1枚を選ぶ。それを捨てる。自分のデッキのコスト3以下のアミュレットからランダム3種類を自分の場に出す。" },
+      { mode: 'super_evolve', cost: 0, conditions: { superEvolveTokenMin: 1 }, effect: '相手の場の攻撃力最大のフォロワーからランダム1枚を破壊。相手の場のフォロワーすべてに1ダメージ。' }
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/裁決のアナテマ・ロデオ.png", // Placeholder image
+  },
+  {
+    id: "bishop10",
+    name: "純白の聖女・ジャンヌ",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 8,
+    attack: 6,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "相手の場のフォロワーすべてに6ダメージ。自分の場の他のフォロワーすべては+2/+4する。<br>【守護】" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/純白の聖女・ジャンヌ.png", // Placeholder image
+  },
+  {
+    id: "bishop11",
+    name: "セイクリッドグリフォン",
+    type: "follower",
+    leader: "bishop",
+    baseCost: 8,
+    attack: 6,
+    toughness: 6,
+    effects: [
+      { mode: "default", cost: 8, conditions: {}, effect: "【守護】<br>自分がアミュレットを【アクト】したとき、これは【疾走】を持つ。" },
+    ],
+    imageUrl: "/svwb_utilities/img/1/bishop/セイクリッドグリフォン.png", // Placeholder image
+  },
 ]
 
 const STRONG_MOVES = {
@@ -1653,7 +1964,6 @@ export default function Home() {
     // Increment graveyard count by 1 each turn (representing a card drawn and potentially discarded later)
     // Or more accurately, a card played from hand goes to graveyard.
     // For simplicity, let's assume one card goes to graveyard each turn.
-    setGraveyardCount(prev => prev + 1); // Increment graveyard count
     // Reset fairy count if leader changes or turn advances
     if (leader !== "elf") { // Only reset if not Elf, otherwise it's managed by user
         setFairyCount(0);
@@ -2131,8 +2441,8 @@ export default function Home() {
         <Card
           shadow="xl"
           withBorder
-          h={"85vh"}
           style={{
+            height:"calc(100vh-133px)",
             minWidth: 380,
             backgroundColor: "var(--mantine-color-dark-8)",
             borderColor: "var(--mantine-color-blue-9)",
@@ -2167,7 +2477,7 @@ export default function Home() {
 
             <Card withBorder p="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
               <Text size="sm" c="blue.4" mb="xs">
-                リーダーと先後
+                相手リーダーと先後
               </Text>
               <Group gap="md">
                 {/* Leader selection card to open modal */}
@@ -2366,8 +2676,8 @@ export default function Home() {
         <Card
           shadow="xl"
           withBorder
-          h={"85vh"}
           style={{
+            height:"calc(100vh-133px)",
             flex: 1,
             backgroundColor: "var(--mantine-color-dark-8)",
             borderColor: "var(--mantine-color-blue-9)",
@@ -2393,26 +2703,6 @@ export default function Home() {
               >
                 トークン管理
               </Tabs.Tab>
-              {/** 
-              <Tabs.Tab
-                value="strong_moves"
-                leftSection={<IconBrain size={16} />}
-                style={{ color: "white" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
-              >
-                強い動き
-              </Tabs.Tab>
-              <Tabs.Tab
-                value="history"
-                leftSection={<IconHistory size={16} />}
-                style={{ color: "white" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "black")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
-              >
-                履歴
-              </Tabs.Tab>
-              */}
             </Tabs.List>
             <Box style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <Tabs.Panel value="removal" pt="md" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
@@ -2744,55 +3034,7 @@ export default function Home() {
               </Stack>
               </ScrollArea>
             </Tabs.Panel>
-
-            <Tabs.Panel value="strong_moves" pt="md">
-              <Stack gap="md">
-                <Title order={3} c="blue.3">
-                  相手の強い動き
-                </Title>
-                {currentStrongMoves.length > 0 ? (
-                  currentStrongMoves.map((move, i) => (
-                    <Card key={i} withBorder p="md" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
-                      <Group justify="space-between">
-                        <Text size="sm" c="blue.4">
-                          T{move.turn}: {move.move}
-                        </Text>
-                        <ThreatBadge threat={move.threat as keyof typeof THREAT_COLORS} />
-                      </Group>
-                    </Card>
-                  ))
-                ) : (
-                  <Text c="blue.4">このリーダーの強い動きはまだ記録されていません。</Text>
-                )}
-              </Stack>
-            </Tabs.Panel>
-
-            <Tabs.Panel value="history" pt="md">
-              <Stack gap="md">
-                <Title order={3} c="blue.3">
-                  ゲーム履歴
-                </Title>
-                <ScrollArea h={500}>
-                  <Stack gap="xs">
-                    {gameHistory
-                      .slice(-20)
-                      .reverse()
-                      .map((entry, i) => (
-                        <Card key={i} withBorder p="xs" style={{ backgroundColor: "var(--mantine-color-dark-7)" }}>
-                          <Group justify="space-between">
-                            <Text size="sm" c="blue.4">
-                              T{entry.turn}: {entry.action}
-                            </Text>
-                            <Text size="xs" c="dark.3">
-                              PP:{entry.pp} 手札:{entry.hand}
-                            </Text>
-                          </Group>
-                        </Card>
-                      ))}
-                  </Stack>
-                </ScrollArea>
-              </Stack>
-            </Tabs.Panel></Box>
+            </Box>
           </Tabs>
         </Card>
       </Group>
